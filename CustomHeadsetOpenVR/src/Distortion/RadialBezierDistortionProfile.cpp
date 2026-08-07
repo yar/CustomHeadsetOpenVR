@@ -606,7 +606,12 @@ Point2D RadialBezierDistortionProfile::ComputeDistortion(vr::EVREye eEye, ColorC
 	}else{
 		distortion.x -= (outerTan - innerTan) / (outerTan + innerTan);
 	}
-	distortion.y -= (topTan - bottomTan) / (topTan + bottomTan);
+	// the output y follows the render texture axis pointing down while the frustum tangents
+	// point up, so the asymmetry shift needs the opposite sign of the horizontal one:
+	// a ray with tangent zero lands at (topTan - bottomTan) / (topTan + bottomTan) which is
+	// above the texture middle when the frustum reaches further down than up. This was
+	// dormant while every profile had a vertically symmetric frustum.
+	distortion.y += (topTan - bottomTan) / (topTan + bottomTan);
 	
 	// if(eEye == vr::Eye_Left){
 	// 	distortion.x = distortion.x * 2.0f + 1.0f;
