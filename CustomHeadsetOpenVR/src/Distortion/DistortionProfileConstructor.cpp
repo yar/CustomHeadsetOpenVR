@@ -260,7 +260,71 @@ bool PopulateBuiltInDistortionProfiles(){
 		50.0, -1.1
 	};
 	builtInDistortionProfiles[crystalSuperBad.name] = crystalSuperBad;
-	
+
+	DistortionProfileConfig crystalSuper50LikePimax = {};
+	crystalSuper50LikePimax.name = "Crystal Super 50ppd like Pimax (set 114x109 max per eye FOV!)";
+	crystalSuper50LikePimax.device = {"CrystalSuper50PPD"};
+	crystalSuper50LikePimax.modifiedTime = 0;
+	crystalSuper50LikePimax.description = "Distortion profile for the Crystal Super 50PPD that combines the lens geometry of the Pimax native profile with the chromatic aberration calibration of Crystal Super Bad. The geometry, including the optical center sitting 3.8% above the panel center, was fitted from a capture of the distortion mesh rendered by the Pimax compositor, where it stays within 0.05 degrees. The chromatic aberration correction follows Crystal Super Bad's calibration near the center and grows along a smooth quartic towards the edges, tuned by eye in the outer band that was never visible with Crystal Super Bad's clamped FOV. Raise Max FOV to 114x109 to render everything the panel can show like the native profile does.";
+	crystalSuper50LikePimax.author = "Pimax, SBoys3";
+	crystalSuper50LikePimax.creationDate = 1786060800.0;
+	crystalSuper50LikePimax.type = "RadialBezier";
+	crystalSuper50LikePimax.offsetY = 3.8f;
+	crystalSuper50LikePimax.eyeRotationOffset = 1.0;
+	crystalSuper50LikePimax.distortions = {
+		0.00, 0.000,
+		2.50, 5.499,
+		5.00, 11.014,
+		10.0, 21.965,
+		15.0, 32.786,
+		20.0, 43.369,
+		25.0, 53.609,
+		30.0, 63.416,
+		35.0, 72.617,
+		40.0, 81.122,
+		45.0, 88.710,
+		47.5, 92.107,
+		50.0, 95.252,
+		52.5, 98.070,
+		55.0, 100.366,
+		57.5, 102.950,
+		60.0, 105.730,
+		62.5, 108.833
+	};
+	crystalSuper50LikePimax.distortionsRed = {
+		0.00, 0.51,
+		5.00, 0.51,
+		10.0, 0.52,
+		15.0, 0.54,
+		20.0, 0.57,
+		25.0, 0.60,
+		30.0, 0.63,
+		35.0, 0.67,
+		40.0, 0.71,
+		45.0, 0.75,
+		50.0, 0.79,
+		55.0, 0.82,
+		60.0, 0.84,
+		62.5, 0.85
+	};
+	crystalSuper50LikePimax.distortionsBlue = {
+		0.00, -0.71,
+		5.00, -0.71,
+		10.0, -0.73,
+		15.0, -0.76,
+		20.0, -0.79,
+		25.0, -0.83,
+		30.0, -0.88,
+		35.0, -0.94,
+		40.0, -1.00,
+		45.0, -1.06,
+		50.0, -1.11,
+		55.0, -1.16,
+		60.0, -1.20,
+		62.5, -1.22
+	};
+	builtInDistortionProfiles[crystalSuper50LikePimax.name] = crystalSuper50LikePimax;
+
 	DistortionProfileConfig pimaxBuiltin = {};
 	pimaxBuiltin.name = "Pimax Builtin";
 	pimaxBuiltin.device = {/*"DreamAir", "DreamAirSE", "CrystalSuper50PPD", "CrystalSuper57PPD", "CrystalSuperUltrawide", "CrystalSuperMicroOLED", "CrystalLight", "CrystalOG",*/ "Pimax5KSuper", "Pimax5KPlus", "Pimax8KX", "Pimax8KPlus", "PimaxArtisan"};
