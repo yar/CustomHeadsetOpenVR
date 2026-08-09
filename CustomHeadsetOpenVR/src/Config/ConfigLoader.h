@@ -18,6 +18,12 @@ public:
 		double renderFovMaxY = 0;
 		double combinedFovX = 0;
 		double combinedFovY = 0;
+		// raw projection half angle tangents for each eye as [left, right, bottom, top]
+		// these are in eye space and do not include eye rotation
+		double projectionLeft[4] = {0, 0, 0, 0};
+		double projectionRight[4] = {0, 0, 0, 0};
+		// eye rotation offset in degrees applied by the active distortion profile on top of the eyeRotation setting
+		double eyeRotationOffset = 0;
 		uint32_t renderResolution1To1X = 0;
 		uint32_t renderResolution1To1Y = 0;
 		double renderResolution1To1Percent = 0;

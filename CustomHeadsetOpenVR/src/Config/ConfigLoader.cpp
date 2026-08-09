@@ -677,6 +677,9 @@ void ConfigLoader::WriteInfo(){
 			{"fovMaxY", info.renderFovMaxY},
 			{"combinedFovX", info.combinedFovX},
 			{"combinedFovY", info.combinedFovY},
+			{"projectionLeft", {info.projectionLeft[0], info.projectionLeft[1], info.projectionLeft[2], info.projectionLeft[3]}},
+			{"projectionRight", {info.projectionRight[0], info.projectionRight[1], info.projectionRight[2], info.projectionRight[3]}},
+			{"eyeRotationOffset", info.eyeRotationOffset},
 			{"renderResolution1To1X", info.renderResolution1To1X},
 			{"renderResolution1To1Y", info.renderResolution1To1Y},
 			{"renderResolution1To1Percent", info.renderResolution1To1Percent},
@@ -761,6 +764,13 @@ void ConfigLoader::ReadInfo(){
 			if(res["fovMaxY"].is_number()) info.renderFovMaxY = res["fovMaxY"].get<double>();
 			if(res["combinedFovX"].is_number()) info.combinedFovX = res["combinedFovX"].get<double>();
 			if(res["combinedFovY"].is_number()) info.combinedFovY = res["combinedFovY"].get<double>();
+			if(res["projectionLeft"].is_array() && res["projectionLeft"].size() == 4){
+				for(int i = 0; i < 4; i++) info.projectionLeft[i] = res["projectionLeft"][i].get<double>();
+			}
+			if(res["projectionRight"].is_array() && res["projectionRight"].size() == 4){
+				for(int i = 0; i < 4; i++) info.projectionRight[i] = res["projectionRight"][i].get<double>();
+			}
+			if(res["eyeRotationOffset"].is_number()) info.eyeRotationOffset = res["eyeRotationOffset"].get<double>();
 			if(res["renderResolution1To1X"].is_number()) info.renderResolution1To1X = res["renderResolution1To1X"].get<int>();
 			if(res["renderResolution1To1Y"].is_number()) info.renderResolution1To1Y = res["renderResolution1To1Y"].get<int>();
 			if(res["renderResolution1To1Percent"].is_number()) info.renderResolution1To1Percent = res["renderResolution1To1Percent"].get<double>();
