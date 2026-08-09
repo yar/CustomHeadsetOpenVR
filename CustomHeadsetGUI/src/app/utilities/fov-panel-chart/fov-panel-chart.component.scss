@@ -1,0 +1,229 @@
+// same WimFOV inspired look as the FOV preview chart, independent so the two stay separable
+$wimfov-background: #FFFFE0;
+$wimfov-text: #1a1a1a;
+$wimfov-red: #FF0000;
+$wimfov-blue: #0000FF;
+$wimfov-green: #008000;
+
+:host {
+    display: block;
+}
+
+:host(.unavailable) {
+    display: none;
+}
+
+.panel-chart-card {
+    margin: 0.5rem 0;
+    padding: 8px 16px 6px 16px;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    background: $wimfov-background;
+    color: $wimfov-text;
+}
+
+.panel-chart-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    .panel-chart-title {
+        font-weight: 700;
+    }
+
+    .panel-chart-hint {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+
+    .stale-badge {
+        background: #c77700;
+        color: #ffffff;
+        border-radius: 10px;
+        padding: 1px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .spacer {
+        flex: 1 1 auto;
+    }
+
+    .channel-picker {
+        display: flex;
+        gap: 4px;
+
+        button {
+            border: 1px solid rgba(0, 0, 0, 0.35);
+            border-radius: 4px;
+            background: transparent;
+            color: $wimfov-text;
+            font-size: 12px;
+            padding: 2px 10px;
+            margin: 0;
+            height: auto;
+            cursor: pointer;
+
+            &.active {
+                background: #333333;
+                color: #ffffe0;
+                border-color: #333333;
+            }
+        }
+    }
+}
+
+.panel-chart-body {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+
+    .panel {
+        flex: 0 1 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        svg {
+            height: 300px;
+            max-width: 100%;
+        }
+
+        &.panel-disabled svg {
+            opacity: 0.3;
+        }
+
+        .panel-name {
+            font-size: 12px;
+            font-weight: 600;
+
+            .name-left {
+                color: $wimfov-red;
+            }
+
+            .name-right {
+                color: $wimfov-blue;
+            }
+        }
+    }
+}
+
+.panel-chart-notes {
+    display: flex;
+    flex-direction: column;
+    margin-top: 4px;
+
+    .note {
+        font-size: 11px;
+        line-height: 1.35;
+        color: #444444;
+    }
+}
+
+// svg styling, coordinates are in the normalized seen space of each eye
+svg {
+    .panel-rect {
+        fill: #ffffff;
+        stroke: #000000;
+        stroke-width: 0.02;
+    }
+
+    .panel-center {
+        fill: none;
+        stroke: #bb00bb;
+        stroke-width: 0.01;
+        stroke-dasharray: 0.05 0.03;
+    }
+
+    .contour {
+        fill: none;
+        stroke-width: 0.008;
+
+        &.channel-single {
+            stroke: #555555;
+        }
+
+        &.channel-red {
+            stroke: $wimfov-red;
+            stroke-opacity: 0.8;
+        }
+
+        &.channel-green {
+            stroke: $wimfov-green;
+            stroke-opacity: 0.8;
+        }
+
+        &.channel-blue {
+            stroke: $wimfov-blue;
+            stroke-opacity: 0.8;
+        }
+    }
+
+    .boundary {
+        fill: none;
+        stroke-width: 0.025;
+
+        &.channel-single {
+            stroke: #000000;
+        }
+
+        &.channel-red {
+            stroke: $wimfov-red;
+        }
+
+        &.channel-green {
+            stroke: $wimfov-green;
+        }
+
+        &.channel-blue {
+            stroke: $wimfov-blue;
+        }
+    }
+
+    .ham {
+        fill: none;
+        stroke: #666666;
+        stroke-width: 0.015;
+        stroke-dasharray: 0.03 0.03;
+    }
+
+    .cross {
+        fill: none;
+        stroke-width: 0.015;
+
+        &.channel-single {
+            stroke: #000000;
+        }
+
+        &.channel-red {
+            stroke: $wimfov-red;
+        }
+
+        &.channel-green {
+            stroke: $wimfov-green;
+        }
+
+        &.channel-blue {
+            stroke: $wimfov-blue;
+        }
+    }
+
+    .forward {
+        fill: none;
+        stroke: #000000;
+        stroke-width: 0.015;
+    }
+
+    .contour-label {
+        fill: #404040;
+        font-size: 0.07px;
+        font-weight: 700;
+        text-anchor: middle;
+        paint-order: stroke;
+        stroke: #ffffff;
+        stroke-width: 0.012;
+    }
+}

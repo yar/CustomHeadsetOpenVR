@@ -56,4 +56,9 @@ public:
 	// returns the resolution required for 1:1 distortion
 	// width and height will be set to the panel resolution by default but should be changed based on the distortion.
 	virtual void GetRecommendedRenderTargetSize(uint32_t* pnWidth, uint32_t* pnHeight){};
+	// the direction the lens is centered on, as tangents (x to the right, y up) in the frame of GetProjectionRaw.
+	// zero when the projection frame is the eye's optical frame, which is the case for the radial profiles;
+	// the Pimax PVR profile in parallel projection mode has the panel cant inside its frame and returns it here.
+	// the GUI measures the view angles of its panel map from this direction
+	virtual Point2D GetOpticalAxis(vr::EVREye eEye){ return {0.f, 0.f}; };
 };

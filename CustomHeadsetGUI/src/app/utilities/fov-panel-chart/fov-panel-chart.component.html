@@ -1,0 +1,66 @@
+@if(chart(); as vm) {
+<div class="panel-chart-card">
+  <div class="panel-chart-header">
+    <span class="panel-chart-title" i18n>Panel Angle Map</span>
+    <span class="panel-chart-hint" i18n>Where view angles land on the panels</span>
+    @if(notLive()) {
+      <span class="stale-badge" i18n>not live — last known data</span>
+    }
+    <span class="spacer"></span>
+    <div class="channel-picker">
+      @for(choice of channelChoices; track choice) {
+        <button type="button" [class.active]="channel() === choice" (click)="channel.set(choice)">
+          @switch(choice) {
+            @case('green') { <span i18n>Green</span> }
+            @case('red') { <span i18n>Red</span> }
+            @case('blue') { <span i18n>Blue</span> }
+            @case('all') { <span i18n>All</span> }
+          }
+        </button>
+      }
+    </div>
+  </div>
+  <div class="panel-chart-body">
+    @for(eye of [vm.left, vm.right]; track $index) {
+      @if(eye) {
+        <div class="panel" [class.panel-disabled]="eye.disabled">
+          <svg [attr.viewBox]="eye.viewBox" preserveAspectRatio="xMidYMid meet">
+            <rect class="panel-rect" [attr.x]="-eye.halfWidth" [attr.y]="-eye.halfHeight"
+              [attr.width]="eye.halfWidth * 2" [attr.height]="eye.halfHeight * 2" />
+            <path class="panel-center" [attr.d]="'M' + (-eye.halfWidth) + ' 0H' + eye.halfWidth + 'M0 ' + (-eye.halfHeight) + 'V' + eye.halfHeight" />
+            @for(contour of eye.contours; track $index) {
+              <path [class]="'contour ' + contour.cls" [attr.d]="contour.path" />
+            }
+            @for(boundary of eye.boundaries; track $index) {
+              <path [class]="'boundary ' + boundary.cls" [attr.d]="boundary.path" />
+            }
+            @if(eye.hamPath) {
+              <path class="ham" [attr.d]="eye.hamPath" />
+            }
+            @for(cross of eye.crosses; track $index) {
+              <path [class]="'cross ' + cross.cls" [attr.d]="'M' + (cross.x - 0.05) + ' ' + cross.y + 'H' + (cross.x + 0.05) + 'M' + cross.x + ' ' + (cross.y - 0.05) + 'V' + (cross.y + 0.05)" />
+            }
+            @if(eye.forward; as forward) {
+              <path class="forward" [attr.d]="'M' + (forward.x - 0.035) + ' ' + (forward.y - 0.035) + 'L' + (forward.x + 0.035) + ' ' + (forward.y + 0.035) + 'M' + (forward.x - 0.035) + ' ' + (forward.y + 0.035) + 'L' + (forward.x + 0.035) + ' ' + (forward.y - 0.035)" />
+            }
+            @for(label of eye.labels; track $index) {
+              <text class="contour-label" [attr.x]="label.x" [attr.y]="label.y - 0.02">{{label.text}}</text>
+            }
+          </svg>
+          <div class="panel-name">
+            @if($index === 0) { <span class="name-left" i18n>Left panel</span> }
+            @else { <span class="name-right" i18n>Right panel</span> }
+          </div>
+        </div>
+      }
+    }
+  </div>
+  <app-panel-chart-legend [showHiddenArea]="hasHiddenArea()" [showForward]="true" />
+  <div class="panel-chart-notes">
+    @if(sampledFromProfile()) {
+      <span class="note"><span i18n>Sampled from profile:</span> {{sampledFromProfile()}}</span>
+    }
+    <span class="note" i18n>This is a simulation from driver data and only updates while the headset is running under this driver.</span>
+  </div>
+</div>
+}
