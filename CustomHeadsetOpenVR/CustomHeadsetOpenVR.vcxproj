@@ -33,6 +33,7 @@
     <ClInclude Include="src\Headsets\MeganeX8K.h" />
     <ClInclude Include="src\Headsets\PimaxLighthouse.h" />
     <ClInclude Include="src\Headsets\PimaxSlam.h" />
+    <ClInclude Include="src\Helpers\FovVisualization.h" />
     <ClInclude Include="src\Helpers\PimaxCommon.h" />
     <ClInclude Include="src\HiddenArea\HiddenArea.h" />
     <ClInclude Include="src\Helpers\AAPVRBlocker.h" />
@@ -76,6 +77,7 @@
     <ClCompile Include="src\Helpers\EyeTrackingOutput.cpp" />
     <ClCompile Include="src\Helpers\AAPVRBlocker.cpp" />
     <ClCompile Include="src\Helpers\MiscHelper.cpp" />
+    <ClCompile Include="src\Helpers\FovVisualization.cpp" />
     <ClCompile Include="src\Helpers\PimaxCommon.cpp" />
     <ClCompile Include="src\Helpers\ShaderDecode.cpp" />
     <ClCompile Include="src\HiddenArea\HiddenArea.cpp" />

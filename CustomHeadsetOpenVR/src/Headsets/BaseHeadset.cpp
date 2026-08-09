@@ -6,6 +6,7 @@
 #include "../Config/ConfigLoader.h"
 #include "../HiddenArea/HiddenArea.h"
 #include "../Helpers/DisplayHelper.h"
+#include "../Helpers/FovVisualization.h"
 
 constexpr float kPi{ 3.1415926535897932384626433832795028841971693993751058209749445f };
 
@@ -651,6 +652,8 @@ void BaseHeadsetShim::UpdateSettings(){
 			uint32_t renderResolutionX, renderResolutionY;
 			GetRecommendedRenderTargetSize(&renderResolutionX, &renderResolutionY);
 			vr::VRServerDriverHost()->SetRecommendedRenderTargetSize(0, renderResolutionX, renderResolutionY);
+			// write the distortion sampling used by the FOV visualization in the GUI
+			FovVisualization::Write(distortionProfileConstructor.profile, GetConfig(), driverConfigLoader.GetConfigFolder());
 		}
 	}
 	
