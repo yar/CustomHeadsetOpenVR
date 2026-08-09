@@ -260,6 +260,11 @@ export type ResolutionInfo = {
   fovMaxY: number,
   combinedFovX: number,
   combinedFovY: number,
+  /** raw projection half angle tangents [left, right, bottom, top] in eye space, without eye rotation */
+  projectionLeft?: number[],
+  projectionRight?: number[],
+  /** eye rotation offset in degrees applied by the active distortion profile */
+  eyeRotationOffset?: number,
   renderResolution1To1X: number,
   renderResolution1To1Y: number,
   renderResolution1To1Percent: number,

@@ -1,0 +1,204 @@
+// colors intentionally match the WimFOV chart style regardless of the app theme
+$wimfov-background: #FFFFE0;
+$wimfov-text: #1a1a1a;
+$wimfov-red: #FF0000;
+$wimfov-blue: #0000FF;
+
+:host {
+    display: block;
+}
+
+:host(.unavailable) {
+    display: none;
+}
+
+.fov-chart-card {
+    padding: 8px 16px 4px 16px;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    background: $wimfov-background;
+    color: $wimfov-text;
+}
+
+.fov-chart-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .fov-chart-title {
+        font-weight: 700;
+    }
+
+    .legend {
+        font-size: 12px;
+
+        .legend-left {
+            color: $wimfov-red;
+            font-weight: 600;
+        }
+
+        .legend-right {
+            color: $wimfov-blue;
+            font-weight: 600;
+        }
+    }
+
+    .stale-badge {
+        background: #c77700;
+        color: #ffffff;
+        border-radius: 10px;
+        padding: 1px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+}
+
+.fov-chart-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    svg {
+        height: 330px;
+        max-width: min(100%, 55vh);
+        flex: 0 1 auto;
+    }
+}
+
+.fov-chart-side {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 320px;
+    min-width: 220px;
+    flex: 0 1 auto;
+
+    .metric {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 13px;
+
+        .metric-name {
+            font-weight: 700;
+        }
+
+        .metric-value {
+            font-weight: 400;
+        }
+    }
+
+    .disclaimer {
+        margin-top: 6px;
+        font-size: 11px;
+        line-height: 1.35;
+        color: #444444;
+    }
+}
+
+// svg styling, sizes are in chart units (degrees)
+svg {
+    .chart-disc {
+        fill: #ffffff;
+        stroke: none;
+    }
+
+    .ring {
+        fill: none;
+        stroke: #aaaaaa;
+        stroke-width: 0.3;
+
+        &.ring-major {
+            stroke: #777777;
+            stroke-width: 0.45;
+        }
+
+        &.ring-outer {
+            stroke: #000000;
+            stroke-width: 1;
+        }
+    }
+
+    .spoke {
+        stroke: #555555;
+        stroke-opacity: 0.8;
+        stroke-width: 0.3;
+        stroke-dasharray: 1.5 2.5;
+
+        &.spoke-left {
+            stroke: $wimfov-red;
+        }
+
+        &.spoke-right {
+            stroke: $wimfov-blue;
+        }
+    }
+
+    .ring-label {
+        fill: #404040;
+        font-size: 4px;
+        font-weight: 700;
+        text-anchor: middle;
+        paint-order: stroke;
+        stroke: #ffffff;
+        stroke-width: 0.6;
+    }
+
+    .eye-left {
+        fill: $wimfov-red;
+        fill-opacity: 0.3;
+        stroke: $wimfov-red;
+        stroke-width: 1;
+    }
+
+    .eye-right {
+        fill: $wimfov-blue;
+        fill-opacity: 0.3;
+        stroke: $wimfov-blue;
+        stroke-width: 1;
+    }
+
+    .center-cross {
+        stroke: #333333;
+        stroke-width: 0.4;
+    }
+
+    .inner-label {
+        rect {
+            stroke: #ffffff;
+            stroke-width: 0.3;
+        }
+
+        text {
+            fill: #ffffff;
+            font-size: 6px;
+            font-weight: 600;
+            text-anchor: middle;
+        }
+
+        &.inner-left rect {
+            fill: $wimfov-red;
+        }
+
+        &.inner-right rect {
+            fill: $wimfov-blue;
+        }
+    }
+
+    .outer-label {
+        font-size: 6.5px;
+        font-weight: 700;
+        text-anchor: middle;
+
+        &.outer-left {
+            fill: $wimfov-red;
+        }
+
+        &.outer-right {
+            fill: $wimfov-blue;
+        }
+    }
+}

@@ -13,6 +13,7 @@ import { FieldNoteComponent } from '../../../utilities/field-note/field-note.com
 import { FieldTipComponent } from '../../../utilities/field-tip/field-tip.component';
 import { ResetButtonComponent } from '../../../utilities/reset-button/reset-button.component';
 import { ColorPickerComponent } from '../../../utilities/color-picker/color-picker.component';
+import { FovChartComponent } from '../../../utilities/fov-chart/fov-chart.component';
 import { DeviceConfigComponentBase } from '../DeviceConfigComponentBase';
 import { BaseHeadsetConfig, HeadsetType } from '../../../services/JsonFileDefines';
 
@@ -58,6 +59,7 @@ export interface HeadsetSettingsConfig {
     FieldTipComponent,
     FieldNoteComponent,
     ColorPickerComponent,
+    FovChartComponent,
     CommonModule
   ],
   templateUrl: './headset-settings.component.html',

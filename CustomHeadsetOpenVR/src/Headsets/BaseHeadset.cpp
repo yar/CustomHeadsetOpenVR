@@ -673,6 +673,16 @@ void BaseHeadsetShim::UpdateSettings(){
 		double combinedFovY = (std::atan(leftEyeTop) - std::atan(leftEyeBottom)) * 180.0 / kPi;
 		driverConfigLoader.info.combinedFovX = combinedFovX;
 		driverConfigLoader.info.combinedFovY = combinedFovY;
+		// save the raw projections for the FOV preview in the GUI
+		driverConfigLoader.info.projectionLeft[0] = leftEyeLeft;
+		driverConfigLoader.info.projectionLeft[1] = leftEyeRight;
+		driverConfigLoader.info.projectionLeft[2] = leftEyeBottom;
+		driverConfigLoader.info.projectionLeft[3] = leftEyeTop;
+		driverConfigLoader.info.projectionRight[0] = rightEyeLeft;
+		driverConfigLoader.info.projectionRight[1] = rightEyeRight;
+		driverConfigLoader.info.projectionRight[2] = rightEyeBottom;
+		driverConfigLoader.info.projectionRight[3] = rightEyeTop;
+		driverConfigLoader.info.eyeRotationOffset = distortionProfileConstructor.profile->eyeRotationOffset;
 		driverConfigLoader.info.needToWrite = true;
 	}
 	
