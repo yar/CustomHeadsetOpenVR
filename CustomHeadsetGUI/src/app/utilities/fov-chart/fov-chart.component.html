@@ -1,0 +1,64 @@
+@if(chart(); as vm) {
+<div class="fov-chart-card">
+  <div class="fov-chart-header">
+    <span class="fov-chart-title" i18n>FOV Preview</span>
+    <span class="legend"><span class="legend-left" i18n>Left eye</span> / <span class="legend-right" i18n>Right eye</span></span>
+    @if(notLive()) {
+      <span class="stale-badge" i18n>not live — last known data</span>
+    }
+  </div>
+  <div class="fov-chart-body">
+    <svg [attr.viewBox]="vm.viewBox" preserveAspectRatio="xMidYMid meet">
+      <!-- backdrop rings every 5 degrees up to the outermost band in use -->
+      <circle class="chart-disc" cx="0" cy="0" [attr.r]="vm.maxRing" />
+      @for(ring of vm.rings; track ring) {
+        <circle class="ring" [class.ring-major]="ring % 30 === 0" [class.ring-outer]="ring === vm.maxRing" cx="0" cy="0" [attr.r]="ring" />
+      }
+      <!-- spokes for the labeled directions -->
+      @for(spoke of vm.spokes; track $index) {
+        <line class="spoke" [class.spoke-left]="spoke.side === 'left'" [class.spoke-right]="spoke.side === 'right'"
+          x1="0" y1="0" [attr.x2]="spoke.x" [attr.y2]="spoke.y" />
+      }
+      @for(label of vm.ringLabels; track $index) {
+        <text class="ring-label" [attr.transform]="'translate(' + label.x + ',' + label.y + ') rotate(' + label.rotation + ')'">{{label.text}}</text>
+      }
+      <!-- eye shapes -->
+      @if(vm.leftPath) {
+        <path class="eye-left" [attr.d]="vm.leftPath" />
+      }
+      @if(vm.rightPath) {
+        <path class="eye-right" [attr.d]="vm.rightPath" />
+      }
+      <!-- center cross -->
+      <path class="center-cross" d="M-3 0H3M0 -3V3" />
+      <!-- per eye angles towards each direction -->
+      @for(label of vm.innerLeft; track $index) {
+        <g class="inner-label inner-left" [attr.transform]="'translate(' + label.x + ',' + label.y + ')'">
+          <rect x="-6.25" y="-3.3" width="12.5" height="6.6" rx="2" />
+          <text y="2">{{label.text}}</text>
+        </g>
+      }
+      @for(label of vm.innerRight; track $index) {
+        <g class="inner-label inner-right" [attr.transform]="'translate(' + label.x + ',' + label.y + ')'">
+          <rect x="-6.25" y="-3.3" width="12.5" height="6.6" rx="2" />
+          <text y="2">{{label.text}}</text>
+        </g>
+      }
+      <!-- combined FOV towards each direction -->
+      @for(label of vm.outer; track $index) {
+        <text class="outer-label" [class.outer-left]="label.side === 'left'" [class.outer-right]="label.side === 'right'"
+          [attr.x]="label.x" [attr.y]="label.y + 2">{{label.text}}</text>
+      }
+    </svg>
+    <div class="fov-chart-side">
+      <div class="metric"><span class="metric-name" i18n>Stereo overlap</span><span class="metric-value">{{vm.stereoOverlap}}°</span></div>
+      <div class="metric"><span class="metric-name" i18n>Full sphere coverage</span><span class="metric-value">{{vm.sphereCoverage}}%</span></div>
+      @if(vm.profileName) {
+        <div class="metric"><span class="metric-name" i18n>Profile</span><span class="metric-value">{{vm.profileName}}</span></div>
+      }
+      <div class="disclaimer" i18n>This is a simulation calculated from the driver FOV data. The full extent shown may not always be physically visible in the headset.</div>
+      <div class="disclaimer" i18n>Distortion related changes only update while the headset is running under this driver.</div>
+    </div>
+  </div>
+</div>
+}

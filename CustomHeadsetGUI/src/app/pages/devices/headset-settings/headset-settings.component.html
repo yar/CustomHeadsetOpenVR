@@ -9,6 +9,8 @@
 <ng-content select="[headset-settings-content]"></ng-content>
 
 @if(settings && defaults) {
+  <div class="settings-with-chart">
+  <div class="settings-column">
   <!-- Enable Driver Toggle -->
   <div class="field ignore-disable">
     <app-field-note type="steamvrRestart" />
@@ -297,6 +299,10 @@
       <mat-slide-toggle [(ngModel)]="settings.parallelProjection"
           (ngModelChange)="saveConfigSettings()"></mat-slide-toggle>
     </div>
+  </div>
+  </div>
+  <!-- FOV preview to the right of the main FOV related controls -->
+  <app-fov-chart [headsetType]="headsetType()" />
   </div>
 
   <!-- Color Tint -->

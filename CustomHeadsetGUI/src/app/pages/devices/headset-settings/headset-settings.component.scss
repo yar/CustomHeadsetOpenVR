@@ -10,3 +10,43 @@
     padding: 0.5rem 1rem;
     margin-bottom: 0.5rem;
 }
+
+// the main FOV related controls with the FOV preview chart to their right
+.settings-with-chart {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    .settings-column {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 30rem;
+        min-width: 30rem;
+
+        // compact the controls so they fit next to the chart instead of
+        // overflowing underneath it
+        .field {
+            grid-template-columns: 14rem minmax(0, 1fr);
+        }
+
+        .control {
+            min-width: 0;
+
+            input[type=number] {
+                width: 6rem;
+            }
+
+            mat-slider,
+            mat-select {
+                min-width: 0;
+            }
+        }
+    }
+
+    app-fov-chart {
+        flex: 0 1 26rem;
+        min-width: 20rem;
+        margin-top: 0.5rem;
+    }
+}
