@@ -394,6 +394,67 @@ bool PopulateBuiltInDistortionProfiles(){
 	};
 	builtInDistortionProfiles[crystalSuperOledLikePimax.name] = crystalSuperOledLikePimax;
 
+	DistortionProfileConfig dreamAirLikePimax = {};
+	dreamAirLikePimax.name = "Dream Air like Pimax";
+	dreamAirLikePimax.device = {"DreamAir"};
+	dreamAirLikePimax.modifiedTime = 0;
+	dreamAirLikePimax.description = "Distortion profile for the Dream Air that combines the lens geometry of the Pimax native profile with the chromatic aberration calibration of the camera calibrated Dream Air Default. The geometry was fitted from a capture of the distortion mesh rendered by the Pimax compositor, including the optical center sitting 2.7% towards the nose and 0.9% above the panel center, and follows the capture within 0.1 degrees. The chromatic aberration correction reproduces the Dream Air Default at every panel radius. Set Max FOV to 98.0x87.0 to render exactly the field the native profile shows.";
+	dreamAirLikePimax.author = "Pimax, SBoys3";
+	dreamAirLikePimax.creationDate = 1786665600.0;
+	dreamAirLikePimax.type = "RadialBezier";
+	dreamAirLikePimax.offsetX = -2.71f;
+	dreamAirLikePimax.offsetY = 0.9f;
+	dreamAirLikePimax.recommendedMaxFovX = 98.0;
+	dreamAirLikePimax.recommendedMaxFovY = 87.0;
+	// the capture's eye pose is the 2 degree cant of the default configuration
+	dreamAirLikePimax.recommendedEyeRotation = 2.0;
+	dreamAirLikePimax.distortions = {
+		0.00, 0.000,
+		2.50, 6.420,
+		5.00, 12.869,
+		10.0, 25.641,
+		15.0, 38.185,
+		20.0, 50.377,
+		25.0, 62.062,
+		30.0, 73.145,
+		35.0, 83.496,
+		40.0, 93.232,
+		45.0, 102.044,
+		47.5, 105.735,
+		50.0, 108.985,
+		52.5, 111.722,
+		55.0, 114.836
+	};
+	dreamAirLikePimax.distortionsRed = {
+		0.00, 0.30,
+		5.00, 0.33,
+		10.0, 0.37,
+		15.0, 0.40,
+		20.0, 0.42,
+		25.0, 0.44,
+		30.0, 0.46,
+		35.0, 0.46,
+		40.0, 0.48,
+		45.0, 0.48,
+		50.0, 0.48,
+		55.0, 0.60
+	};
+	dreamAirLikePimax.distortionsBlue = {
+		0.00, -0.20,
+		5.00, -0.24,
+		10.0, -0.28,
+		15.0, -0.32,
+		20.0, -0.36,
+		25.0, -0.39,
+		30.0, -0.48,
+		35.0, -0.59,
+		40.0, -0.67,
+		45.0, -0.68,
+		50.0, -0.68,
+		55.0, -0.71
+	};
+	builtInDistortionProfiles[dreamAirLikePimax.name] = dreamAirLikePimax;
+
 
 	DistortionProfileConfig pimaxBuiltin = {};
 	pimaxBuiltin.name = "Pimax Builtin";
