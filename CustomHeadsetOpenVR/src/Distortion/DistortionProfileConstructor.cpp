@@ -330,8 +330,71 @@ bool PopulateBuiltInDistortionProfiles(){
 	crystalSuperUltrawideDefault.eyeRotationOffset = -2.0;
 	crystalSuperUltrawideDefault.description += " The screens in the ultrawide are moved outwards farther but otherwise the profile is the same.";
 	builtInDistortionProfiles[crystalSuperUltrawideDefault.name] = crystalSuperUltrawideDefault;
-	
-	
+
+	DistortionProfileConfig crystalSuperOledLikePimax = {};
+	crystalSuperOledLikePimax.name = "Crystal Super micro-OLED like Pimax";
+	crystalSuperOledLikePimax.device = {"CrystalSuperMicroOLED"};
+	crystalSuperOledLikePimax.modifiedTime = 0;
+	crystalSuperOledLikePimax.description = "Distortion profile for the Crystal Super micro-OLED that combines the lens geometry of the Pimax native profile with the chromatic aberration calibration of the camera calibrated Crystal Super Micro-OLED Default. The geometry was fitted from a capture of the distortion mesh rendered by the Pimax compositor, including the optical center sitting 3.6% towards the nose and 2.7% above the panel center, and follows the capture within 0.1 degrees. The chromatic aberration correction reproduces the Micro-OLED Default at every panel radius. Set Max FOV to 98.2x87.1 to render exactly the field the native profile shows.";
+	crystalSuperOledLikePimax.author = "Pimax, SBoys3";
+	crystalSuperOledLikePimax.creationDate = 1786233600.0;
+	crystalSuperOledLikePimax.type = "RadialBezier";
+	crystalSuperOledLikePimax.offsetX = -3.59f;
+	crystalSuperOledLikePimax.offsetY = 2.69f;
+	crystalSuperOledLikePimax.eyeRotationOffset = -1.0;
+	crystalSuperOledLikePimax.recommendedMaxFovX = 98.2;
+	crystalSuperOledLikePimax.recommendedMaxFovY = 87.1;
+	// fitted against the configured 3 degrees, the captured 2 degree cant is the eyeRotationOffset
+	crystalSuperOledLikePimax.recommendedEyeRotation = 3.0;
+	crystalSuperOledLikePimax.distortions = {
+		0.00, 0.000,
+		2.50, 6.430,
+		5.00, 12.871,
+		10.0, 25.638,
+		15.0, 38.183,
+		20.0, 50.374,
+		25.0, 62.063,
+		30.0, 73.141,
+		35.0, 83.498,
+		40.0, 93.230,
+		45.0, 102.040,
+		47.5, 105.733,
+		50.0, 108.973,
+		52.5, 111.730,
+		55.0, 114.792,
+		57.5, 118.138
+	};
+	crystalSuperOledLikePimax.distortionsRed = {
+		0.00, 0.30,
+		5.00, 0.33,
+		10.0, 0.37,
+		15.0, 0.40,
+		20.0, 0.42,
+		25.0, 0.44,
+		30.0, 0.46,
+		35.0, 0.46,
+		40.0, 0.48,
+		45.0, 0.48,
+		50.0, 0.48,
+		55.0, 0.59
+	};
+	crystalSuperOledLikePimax.distortionsBlue = {
+		0.00, -0.20,
+		5.00, -0.24,
+		10.0, -0.28,
+		15.0, -0.32,
+		20.0, -0.35,
+		25.0, -0.39,
+		30.0, -0.48,
+		35.0, -0.59,
+		40.0, -0.67,
+		45.0, -0.68,
+		50.0, -0.68,
+		55.0, -0.69
+	};
+	builtInDistortionProfiles[crystalSuperOledLikePimax.name] = crystalSuperOledLikePimax;
+
+
 	DistortionProfileConfig pimaxBuiltin = {};
 	pimaxBuiltin.name = "Pimax Builtin";
 	pimaxBuiltin.device = {/*"DreamAir", "DreamAirSE", "CrystalSuper50PPD", "CrystalSuper57PPD", "CrystalSuperUltrawide", "CrystalSuperMicroOLED", "CrystalLight", "CrystalOG",*/ "Pimax5KSuper", "Pimax5KPlus", "Pimax8KX", "Pimax8KPlus", "PimaxArtisan"};
