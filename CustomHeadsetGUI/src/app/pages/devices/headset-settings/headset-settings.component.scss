@@ -11,6 +11,23 @@
     margin-bottom: 0.5rem;
 }
 
+// the recommended settings warning of the selected distortion profile
+.profile-recommendation {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+
+    mat-icon {
+        flex-shrink: 0;
+    }
+
+    button {
+        margin: 0;
+        white-space: nowrap;
+    }
+}
+
 // the main FOV related controls with the FOV preview chart to their right
 .settings-with-chart {
     display: flex;

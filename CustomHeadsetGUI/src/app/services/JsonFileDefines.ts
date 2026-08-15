@@ -286,6 +286,10 @@ export type BuiltInDistortionProfile = {
   smoothAmount?: number;
   offsetX?: number;
   offsetY?: number;
+  /** the settings this profile was calibrated for, absent when the profile has no recommendation */
+  recommendedMaxFovX?: number;
+  recommendedMaxFovY?: number;
+  recommendedEyeRotation?: number;
 };
 
 export type BuiltInDistortionProfiles = {

@@ -156,6 +156,75 @@ export class HeadsetSettingsComponent extends DeviceConfigComponentBase<BaseHead
     }
   }
 
+  /** recommended settings declared by the currently selected distortion profile, null when it declares none */
+  profileRecommendation(): { maxFovX?: number; maxFovY?: number; eyeRotation?: number } | null {
+    const name = this.settings?.distortionProfile;
+    if (!name) {
+      return null;
+    }
+    // built in profiles take precedence over profile files with the same name, like in the driver
+    const source = this.dis.values()?.builtInDistortionProfiles?.[name]
+      ?? this.dss.distortionProfileList().find(f => f.name.split('.').slice(0, -1).join('.') === name);
+    if (!source) {
+      return null;
+    }
+    if (source.recommendedMaxFovX === undefined && source.recommendedMaxFovY === undefined
+      && source.recommendedEyeRotation === undefined) {
+      return null;
+    }
+    return {
+      maxFovX: source.recommendedMaxFovX,
+      maxFovY: source.recommendedMaxFovY,
+      eyeRotation: source.recommendedEyeRotation,
+    };
+  }
+
+  /**
+   * the recommended settings of the selected profile that the current settings deviate from,
+   * empty when the profile has no recommendations or they are all met
+   */
+  profileRecommendationDeviations(): { name: string; recommended: number; current: string }[] {
+    const rec = this.profileRecommendation();
+    if (!rec || !this.settings) {
+      return [];
+    }
+    const differs = (value: number, recommended?: number) => recommended !== undefined && Math.abs(value - recommended) > 0.01;
+    const deviations: { name: string; recommended: number; current: string }[] = [];
+    if (differs(this.settings.maxFovX, rec.maxFovX)) {
+      deviations.push({ name: 'MaxFovH', recommended: rec.maxFovX!, current: `${this.settings.maxFovX}` });
+    }
+    if (differs(this.settings.maxFovY, rec.maxFovY)) {
+      deviations.push({ name: 'MaxFovV', recommended: rec.maxFovY!, current: `${this.settings.maxFovY}` });
+    }
+    // a recommended eye rotation is an explicit value, auto eye rotation would override it
+    if (rec.eyeRotation !== undefined && (this.settings.autoEyeRotation || differs(this.settings.eyeRotation, rec.eyeRotation))) {
+      deviations.push({
+        name: $localize`eye rotation`,
+        recommended: rec.eyeRotation,
+        current: this.settings.autoEyeRotation ? $localize`auto` : `${this.settings.eyeRotation}`,
+      });
+    }
+    return deviations;
+  }
+
+  applyProfileRecommendation() {
+    const rec = this.profileRecommendation();
+    if (!rec || !this.settings) {
+      return;
+    }
+    if (rec.maxFovX !== undefined) {
+      this.settings.maxFovX = rec.maxFovX;
+    }
+    if (rec.maxFovY !== undefined) {
+      this.settings.maxFovY = rec.maxFovY;
+    }
+    if (rec.eyeRotation !== undefined) {
+      this.settings.autoEyeRotation = false;
+      this.settings.eyeRotation = rec.eyeRotation;
+    }
+    this.saveConfigSettings();
+  }
+
   setResolution() {
     if (this.settings && this.resolutionModel != null) {
       const res = this.config().resolutionOptions[this.resolutionModel];
