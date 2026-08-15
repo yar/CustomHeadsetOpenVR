@@ -257,8 +257,25 @@ export class HeadsetSettingsComponent extends DeviceConfigComponentBase<BaseHead
     return Math.ceil(originalFOV / (this.settings?.fovZoom || 1));
   }
 
-  binocularOverlap(horizontalFov: number) {
-    return Math.max(0, horizontalFov - (this.settings?.eyeRotation || 0) * 2);
+  /**
+   * horizontal binocular overlap in degrees: the span both eyes see, from the right eye's inner
+   * (left) edge to the left eye's inner (right) edge, with each eye rotated outwards by the eye
+   * rotation and the profile's eye rotation offset. Uses the raw projections the driver reports so
+   * asymmetric frustums are handled the same way as the combined FOV; falls back to a symmetric
+   * approximation from the per eye FOV when the projections are not available.
+   */
+  binocularOverlap(res: { fovX: number, projectionLeft?: number[], projectionRight?: number[], eyeRotationOffset?: number }) {
+    const rotation = (this.settings?.eyeRotation || 0) + (res.eyeRotationOffset || 0);
+    const left = res.projectionLeft;
+    const right = res.projectionRight;
+    if (left?.length === 4 && right?.length === 4) {
+      const toDegrees = (tangent: number) => Math.atan(tangent) * 180 / Math.PI;
+      // inner edges: left eye's right edge and right eye's left edge, each moved inwards by the outward rotation
+      const leftEyeInner = toDegrees(left[1]) - rotation;
+      const rightEyeInner = -toDegrees(right[0]) - rotation;
+      return Math.max(0, leftEyeInner + rightEyeInner);
+    }
+    return Math.max(0, res.fovX - rotation * 2);
   }
 
   showBurnInDeviationNote(maxPossibleFovX: number, maxPossibleFovY: number) {
