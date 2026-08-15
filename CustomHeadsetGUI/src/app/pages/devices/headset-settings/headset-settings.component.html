@@ -326,11 +326,50 @@
   <app-fov-chart [headsetType]="headsetType()" />
   </div>
 
-  <!-- Panel angle map showing how view angles land on the panels, with the chromatic aberration curves of the profile to its right -->
+  <!-- Panel angle map showing how view angles land on the panels, with the chromatic aberration curves of the profile to its right when revealed -->
   <div class="panel-charts-row">
     <app-fov-panel-chart [headsetType]="headsetType()" />
-    <app-fov-ca-chart [headsetType]="headsetType()" />
+    <!-- the chart goes with the scale setting, without it there is no button to reveal or hide it -->
+    @if(showCaChart() && defaults.chromaticAberrationScaleRed !== undefined) {
+      <app-fov-ca-chart [headsetType]="headsetType()" [profile]="settings.distortionProfile"
+          [scaleRed]="settings.chromaticAberrationScaleRed" [scaleBlue]="settings.chromaticAberrationScaleBlue" />
+    }
   </div>
+
+  <!-- Chromatic Aberration Correction Strength, red and blue -->
+  @if(defaults.chromaticAberrationScaleRed !== undefined) {
+  <div class="field">
+    <div class="title">
+      <span i18n>Chromatic Aberration Correction Strength</span>
+      <app-field-tip i18n-info
+          info="Strengthens or weakens the chromatic aberration correction of the distortion profile for the red and blue channels. This is a crude method intended to check whether the profile can be improved further. " />
+      <app-reset-button [canReset]="settings.chromaticAberrationScaleRed !== defaults.chromaticAberrationScaleRed || settings.chromaticAberrationScaleBlue !== defaults.chromaticAberrationScaleBlue"
+          (resetClick)="resetOption('chromaticAberrationScaleRed'); resetOption('chromaticAberrationScaleBlue')"></app-reset-button>
+    </div>
+    <div class="control ca-scale-controls">
+      <div class="ca-scale-channel">
+        <span class="ca-scale-label red" i18n>Red</span>
+        <input matInput [(ngModel)]="settings.chromaticAberrationScaleRed" step="0.01" (ngModelChange)="saveConfigSettings()"
+            type="number">
+        <mat-slider max="2" min="0" step="0.01" showTickMarks>
+          <input matSliderThumb [(ngModel)]="settings.chromaticAberrationScaleRed" (ngModelChange)="saveConfigSettings()">
+        </mat-slider>
+      </div>
+      <div class="ca-scale-channel">
+        <span class="ca-scale-label blue" i18n>Blue</span>
+        <input matInput [(ngModel)]="settings.chromaticAberrationScaleBlue" step="0.01" (ngModelChange)="saveConfigSettings()"
+            type="number">
+        <mat-slider max="2" min="0" step="0.01" showTickMarks>
+          <input matSliderThumb [(ngModel)]="settings.chromaticAberrationScaleBlue" (ngModelChange)="saveConfigSettings()">
+        </mat-slider>
+      </div>
+      <button mat-stroked-button class="ca-chart-toggle" (click)="showCaChart.set(!showCaChart())">
+        @if(showCaChart()) { <span i18n>Hide curve</span> }
+        @else { <span i18n>Show curve</span> }
+      </button>
+    </div>
+  </div>
+  }
 
   <!-- Color Tint -->
   @if(defaults.colorMultiplier) {

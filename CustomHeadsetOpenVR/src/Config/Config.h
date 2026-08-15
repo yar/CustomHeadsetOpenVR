@@ -191,6 +191,9 @@ public:
 		double fovZoom = 1.0;
 		// amount to zoom in the FOV using tangent-based scaling for flatter perception
 		double flatFovZoom = 1.0;
+		// strength of the chromatic aberration correction of the distortion profile per channel: the red and blue offsets from green are multiplied by these, 1 as calibrated, 0 removes the correction
+		double chromaticAberrationScaleRed = 1.0;
+		double chromaticAberrationScaleBlue = 1.0;
 		// multiplier for the subpixel offsets
 		double subpixelShift = 1.0;
 		// subpixel offsets in pixel units for each color channel [offsetXRed, offsetYRed, offsetXGreen, offsetYGreen, offsetXBlue, offsetYBlue]

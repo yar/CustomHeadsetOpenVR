@@ -24,6 +24,10 @@
               <line class="edge" [attr.x1]="ex" [attr.x2]="ex" [attr.y1]="plotTop" [attr.y2]="plotBottom" />
               <text class="edge-label" [attr.x]="ex - 3" [attr.y]="plotTop + 9" i18n>panel edge</text>
             }
+            @if(facet.redDefaultPath) {
+              <path class="curve red default" [attr.d]="facet.redDefaultPath" />
+              <path class="curve blue default" [attr.d]="facet.blueDefaultPath" />
+            }
             <path class="curve red" [attr.d]="facet.redPath" />
             <path class="curve blue" [attr.d]="facet.bluePath" />
             @for(node of facet.redNodes; track $index) {
@@ -37,6 +41,9 @@
       }
     </div>
     <div class="ca-chart-notes">
+      @if(vm.scaleRed !== 1 || vm.scaleBlue !== 1) {
+        <span class="note"><span i18n>Chromatic aberration correction strength red</span> {{vm.scaleRed}}, <span i18n>blue</span> {{vm.scaleBlue}}: <span i18n>solid is applied, dashed is the original value.</span></span>
+      }
       <span class="note"><span i18n>Profile:</span> {{vm.profileName}}</span>
     </div>
   } @else {
