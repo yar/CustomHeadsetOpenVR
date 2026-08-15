@@ -86,3 +86,45 @@
         max-width: 32rem;
     }
 }
+// the red and blue chromatic aberration scales side by side, wrapping when narrow
+.ca-scale-controls {
+    display: flex;
+    gap: 1rem 1.5rem;
+    flex-wrap: wrap;
+
+    .ca-scale-channel {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1 1 16rem;
+        min-width: 14rem;
+
+        .ca-scale-label {
+            font-weight: 600;
+            min-width: 2.5rem;
+
+            &.red {
+                color: #c62828;
+            }
+
+            &.blue {
+                color: #1565c0;
+            }
+        }
+
+        input[type=number] {
+            width: 5rem;
+        }
+
+        mat-slider {
+            flex: 1 1 auto;
+            min-width: 6rem;
+        }
+    }
+
+    // reveals the curve chart, kept at its natural width to the right of the sliders
+    .ca-chart-toggle {
+        flex: 0 0 auto;
+        align-self: center;
+    }
+}

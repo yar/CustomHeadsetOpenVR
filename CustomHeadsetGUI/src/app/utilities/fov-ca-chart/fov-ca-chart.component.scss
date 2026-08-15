@@ -103,6 +103,13 @@ svg {
         &.blue {
             stroke: $wimfov-blue;
         }
+
+        // the profile as calibrated, beneath the scaled curve
+        &.default {
+            stroke-width: 1.2;
+            stroke-dasharray: 4 3;
+            opacity: 0.55;
+        }
     }
 
     .node {

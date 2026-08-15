@@ -337,6 +337,15 @@ void RadialBezierDistortionProfile::Initialize(){
 		distortionsBluePercent = SmoothPoints2(distortionsBlue, inBetweenPoints);
 	}
 	
+	// scale the strength of the chromatic aberration correction per channel: the whole offset from
+	// green is multiplied by the scale, 0 removes the correction, 1 leaves the profile as calibrated
+	for(DistortionPoint& point : distortionsRedPercent){
+		point.position *= chromaticAberrationScaleRed;
+	}
+	for(DistortionPoint& point : distortionsBluePercent){
+		point.position *= chromaticAberrationScaleBlue;
+	}
+
 	std::vector<DistortionPoint> distortionsSmoothRed = distortionsSmoothGreen;
 	std::vector<DistortionPoint> distortionsSmoothBlue = distortionsSmoothGreen;
 	// correct for chromatic aberration
