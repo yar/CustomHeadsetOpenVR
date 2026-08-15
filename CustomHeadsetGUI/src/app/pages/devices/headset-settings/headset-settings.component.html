@@ -189,7 +189,10 @@
               <p>
                 <span i18n="@@combinedHfov">Combined HFOV</span>
                 <span>&nbsp;:&nbsp;</span>
-                <span>{{res.combinedFovX.toFixed(1)}}</span>
+                <span>{{res.combinedFovX.toFixed(1)}}°,&nbsp;</span>
+                <span i18n="@@binocularOverlapShort">binocular overlap</span>
+                <span>&nbsp;:&nbsp;</span>
+                <span>{{binocularOverlap(res).toFixed(1)}}°</span>
               </p>
             }
           }
@@ -228,7 +231,7 @@
                 <p>
                   <span i18n="@@binocularOverlap">Current Binocular Overlap</span>
                   <span>&nbsp;:&nbsp;</span>
-                  <span>{{binocularOverlap(res.fovX).toFixed(1)}}</span>
+                  <span>{{binocularOverlap(res).toFixed(1)}}</span>
                 </p>
               }
               @if(res.fovMaxX) {
