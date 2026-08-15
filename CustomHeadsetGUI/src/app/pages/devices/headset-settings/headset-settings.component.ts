@@ -1,4 +1,4 @@
-import { Component, computed, effect, input, output } from '@angular/core';
+import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -84,6 +84,9 @@ export class HeadsetSettingsComponent extends DeviceConfigComponentBase<BaseHead
     return current !== undefined && current !== this.headsetType();
   });
   
+  /** the chromatic aberration curve chart is opt in, revealed by the button next to its sliders */
+  showCaChart = signal(false);
+
   resolutionModel?: number; // index into resolutionOptions
   defaultResolutionIndex = computed(() => {
     if (!this.defaults) {
@@ -132,6 +135,14 @@ export class HeadsetSettingsComponent extends DeviceConfigComponentBase<BaseHead
       this.dss.values();
       if (this.config().showDisplayRotation && this.settings) {
         this.displayRotationModel = this.settings.displayRotation;
+      }
+    });
+    // the button that hides the chart sits with the scale sliders, so the chart must not outlive them.
+    // defaults is refreshed from the driver info by the base class, read the same signal to follow it
+    effect(() => {
+      this.dis.values();
+      if (this.defaults?.chromaticAberrationScaleRed === undefined) {
+        this.showCaChart.set(false);
       }
     });
   }

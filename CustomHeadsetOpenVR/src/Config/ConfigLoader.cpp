@@ -66,6 +66,17 @@ void parseBaseHeadsetConfig(json headsetData, Config::BaseHeadsetConfig& headset
 	if(headsetData["fovZoom"].is_number()){
 		headsetConfig.fovZoom = headsetData["fovZoom"].get<double>();
 	}
+	if(headsetData["chromaticAberrationScale"].is_number()){
+		// the single scale of earlier builds applies to both channels
+		headsetConfig.chromaticAberrationScaleRed = headsetData["chromaticAberrationScale"].get<double>();
+		headsetConfig.chromaticAberrationScaleBlue = headsetConfig.chromaticAberrationScaleRed;
+	}
+	if(headsetData["chromaticAberrationScaleRed"].is_number()){
+		headsetConfig.chromaticAberrationScaleRed = headsetData["chromaticAberrationScaleRed"].get<double>();
+	}
+	if(headsetData["chromaticAberrationScaleBlue"].is_number()){
+		headsetConfig.chromaticAberrationScaleBlue = headsetData["chromaticAberrationScaleBlue"].get<double>();
+	}
 	if(headsetData["flatFovZoom"].is_number()){
 		headsetConfig.flatFovZoom = headsetData["flatFovZoom"].get<double>();
 	}
@@ -552,6 +563,8 @@ ordered_json baseHeadsetInfo(Config::BaseHeadsetConfig& headsetConfig){
 		{"distortionZoom", headsetConfig.distortionZoom},
 		{"fovZoom", headsetConfig.fovZoom},
 		{"flatFovZoom", headsetConfig.flatFovZoom},
+		{"chromaticAberrationScaleRed", headsetConfig.chromaticAberrationScaleRed},
+		{"chromaticAberrationScaleBlue", headsetConfig.chromaticAberrationScaleBlue},
 		{"subpixelShift", headsetConfig.subpixelShift},
 		{"subpixelOffsets", headsetConfig.subpixelOffsets},
 		{"resolutionX", headsetConfig.resolutionX},

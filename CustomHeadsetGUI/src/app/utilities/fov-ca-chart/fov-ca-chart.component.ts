@@ -8,9 +8,12 @@ import { settingsFieldByHeadsetType } from '../fov-chart/headset-fields';
 import { CurvePoint, knotsFromFlat, sampleCurve, smoothPoints } from './radial-bezier-curves';
 
 type Facet = {
-  /** svg path of the red curve */
+  /** svg path of the red curve as applied, with the chromatic aberration scale */
   redPath: string;
   bluePath: string;
+  /** the profile's own curves, drawn beneath the scaled ones when the scale is not 1, empty otherwise */
+  redDefaultPath: string;
+  blueDefaultPath: string;
   /** knot markers, only on the offset facet where the knots live */
   redNodes: CurvePoint[];
   blueNodes: CurvePoint[];
@@ -27,6 +30,9 @@ type CaChartViewModel = {
   profileName: string;
   maxDegree: number;
   edgeDegree: number | null;
+  /** the chromatic aberration scales the curves are drawn with */
+  scaleRed: number;
+  scaleBlue: number;
 };
 
 /** chart drawing area in svg units, the svg scales to its box */
@@ -43,6 +49,16 @@ const MARGIN = { left: 38, right: 10, top: 8, bottom: 22 };
 export class FovCaChartComponent {
   /** the headset type of the settings page hosting this chart */
   headsetType = input.required<HeadsetType>();
+  /**
+   * the chromatic aberration scale currently set on the page. Passed in as an input because the
+   * settings pages mutate the config objects in place, so the settings signal does not change
+   * while a slider is dragged and a computed reading it would not update; an input binding is
+   * re-evaluated by change detection on every edit.
+   */
+  scaleRed = input<number | null | undefined>(1);
+  scaleBlue = input<number | null | undefined>(1);
+  /** the profile name currently selected on the page, an input for the same reason as the scale */
+  profileNameInput = input<string | null | undefined>(undefined, { alias: 'profile' });
 
   private dis = inject(DriverInfoService);
   private dss = inject(DriverSettingService);
@@ -52,7 +68,7 @@ export class FovCaChartComponent {
     const settings = this.dss.values();
     const field = settingsFieldByHeadsetType[this.headsetType()];
     const config = field ? settings?.[field] as BaseHeadsetConfig : undefined;
-    const name = config?.distortionProfile;
+    const name = this.profileNameInput() ?? config?.distortionProfile;
     if (!name || name === 'None') {
       return null;
     }
@@ -97,8 +113,17 @@ export class FovCaChartComponent {
     const redKnots = knotsFromFlat(p.red && p.red.length >= 4 ? p.red : [0, 0.5, 47.5, 0.5]);
     const blueKnots = knotsFromFlat(p.blue && p.blue.length >= 4 ? p.blue : [0, -0.7, 47.5, -0.7]);
     const green = smoothPoints(greenKnots);
-    const red = smoothPoints(redKnots);
-    const blue = smoothPoints(blueKnots);
+    const redDefault = smoothPoints(redKnots);
+    const blueDefault = smoothPoints(blueKnots);
+    // the chromatic aberration scales, mirroring RadialBezierDistortionProfile::Initialize: the
+    // whole offset from green of each channel is multiplied by its scale
+    const readScale = (value: number | null | undefined) => typeof value === 'number' && isFinite(value) ? value : 1;
+    const scaleRed = readScale(this.scaleRed());
+    const scaleBlue = readScale(this.scaleBlue());
+    const scaled = scaleRed !== 1 || scaleBlue !== 1;
+    const applyScale = (curve: CurvePoint[], scale: number) => scale === 1 ? curve : curve.map(pt => ({ x: pt.x, y: pt.y * scale }));
+    const red = applyScale(redDefault, scaleRed);
+    const blue = applyScale(blueDefault, scaleBlue);
     const maxDegree = greenKnots[greenKnots.length - 1].x;
     // where the panel edge falls in degrees: the green curve reaches the half height (100 percent)
     let edgeDegree: number | null = null;
@@ -113,32 +138,44 @@ export class FovCaChartComponent {
     const halfMin = Math.min(config?.resolutionX || 0, config?.resolutionY || 0) / 2;
 
     const step = 0.5;
-    const offsetRed: CurvePoint[] = [];
-    const offsetBlue: CurvePoint[] = [];
-    const pixelRed: CurvePoint[] = [];
-    const pixelBlue: CurvePoint[] = [];
+    const series = { offset: this.emptySeries(), pixels: this.emptySeries() };
     for (let d = 0; d <= maxDegree + 1e-6; d += step) {
       const g = sampleCurve(green, d);
       const r = sampleCurve(red, d);
       const b = sampleCurve(blue, d);
-      offsetRed.push({ x: d, y: r });
-      offsetBlue.push({ x: d, y: b });
+      const r0 = sampleCurve(redDefault, d);
+      const b0 = sampleCurve(blueDefault, d);
+      series.offset.red.push({ x: d, y: r });
+      series.offset.blue.push({ x: d, y: b });
+      series.offset.redDefault.push({ x: d, y: r0 });
+      series.offset.blueDefault.push({ x: d, y: b0 });
       // displacement of the channel on the panel relative to green, in pixels
-      pixelRed.push({ x: d, y: g * (r / 100) / 100 * halfMin });
-      pixelBlue.push({ x: d, y: g * (b / 100) / 100 * halfMin });
+      const toPixels = (offset: number) => g * (offset / 100) / 100 * halfMin;
+      series.pixels.red.push({ x: d, y: toPixels(r) });
+      series.pixels.blue.push({ x: d, y: toPixels(b) });
+      series.pixels.redDefault.push({ x: d, y: toPixels(r0) });
+      series.pixels.blueDefault.push({ x: d, y: toPixels(b0) });
     }
+    // the profile's own knots, scaled the same way, so the nodes sit on the curve that is applied
     return {
-      offset: this.buildFacet(offsetRed, offsetBlue, redKnots, blueKnots, maxDegree, '%'),
-      pixels: halfMin > 0 ? this.buildFacet(pixelRed, pixelBlue, [], [], maxDegree, 'px') : this.buildFacet([], [], [], [], maxDegree, 'px'),
+      offset: this.buildFacet(series.offset, applyScale(redKnots, scaleRed), applyScale(blueKnots, scaleBlue), maxDegree, '%', scaled),
+      pixels: halfMin > 0 ? this.buildFacet(series.pixels, [], [], maxDegree, 'px', scaled) : this.buildFacet(this.emptySeries(), [], [], maxDegree, 'px', false),
       profileName: this.profileName(),
       maxDegree,
       edgeDegree,
+      scaleRed,
+      scaleBlue,
     };
   });
 
-  private buildFacet(red: CurvePoint[], blue: CurvePoint[], redNodes: CurvePoint[], blueNodes: CurvePoint[],
-    maxDegree: number, unit: string): Facet {
-    const all = [...red, ...blue, ...redNodes, ...blueNodes].map(p => p.y);
+  private emptySeries() {
+    return { red: [] as CurvePoint[], blue: [] as CurvePoint[], redDefault: [] as CurvePoint[], blueDefault: [] as CurvePoint[] };
+  }
+
+  private buildFacet(series: { red: CurvePoint[]; blue: CurvePoint[]; redDefault: CurvePoint[]; blueDefault: CurvePoint[] },
+    redNodes: CurvePoint[], blueNodes: CurvePoint[], maxDegree: number, unit: string, showDefault: boolean): Facet {
+    const { red, blue, redDefault, blueDefault } = series;
+    const all = [...red, ...blue, ...redNodes, ...blueNodes, ...(showDefault ? [...redDefault, ...blueDefault] : [])].map(p => p.y);
     let yMin = Math.min(0, ...all);
     let yMax = Math.max(0, ...all);
     if (yMax - yMin < 1e-9) {
@@ -167,6 +204,8 @@ export class FovCaChartComponent {
     return {
       redPath: toPath(red),
       bluePath: toPath(blue),
+      redDefaultPath: showDefault ? toPath(redDefault) : '',
+      blueDefaultPath: showDefault ? toPath(blueDefault) : '',
       redNodes: redNodes.map(p => ({ x: xScale(p.x), y: yScale(p.y) })),
       blueNodes: blueNodes.map(p => ({ x: xScale(p.x), y: yScale(p.y) })),
       yTicks,

@@ -114,6 +114,9 @@ export type BaseHeadsetConfig = {
   distortionZoom: number;
   fovZoom: number;
   flatFovZoom: number;
+  /** strength of the profile's chromatic aberration correction per channel, multiplies the red and blue offsets from green, 1 as calibrated */
+  chromaticAberrationScaleRed: number;
+  chromaticAberrationScaleBlue: number;
   subpixelShift: number;
   subpixelOffsets: number[];
   resolutionX: number;

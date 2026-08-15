@@ -35,6 +35,9 @@ public:
 	float fovZoom = 1;
 	// amount to zoom in the FOV using tangent-based scaling for flatter perception
 	float flatFovZoom = 1;
+	// strength of the chromatic aberration correction per channel, multiplies the red and blue offsets from green
+	float chromaticAberrationScaleRed = 1;
+	float chromaticAberrationScaleBlue = 1;
 	// if true, the distortion profile will clamp the image to the bounds of the display
 	bool fovClamping = true;
 	// additional eye rotation offset in degrees to apply on top of the headset's eye rotation. this can be used to match existing profiles when a new one is asymmetric.
