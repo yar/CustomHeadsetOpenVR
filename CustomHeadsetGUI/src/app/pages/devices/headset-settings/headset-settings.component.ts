@@ -15,6 +15,7 @@ import { ResetButtonComponent } from '../../../utilities/reset-button/reset-butt
 import { ColorPickerComponent } from '../../../utilities/color-picker/color-picker.component';
 import { FovChartComponent } from '../../../utilities/fov-chart/fov-chart.component';
 import { FovPanelChartComponent } from '../../../utilities/fov-panel-chart/fov-panel-chart.component';
+import { FovCaChartComponent } from '../../../utilities/fov-ca-chart/fov-ca-chart.component';
 import { DeviceConfigComponentBase } from '../DeviceConfigComponentBase';
 import { BaseHeadsetConfig, HeadsetType } from '../../../services/JsonFileDefines';
 
@@ -62,6 +63,7 @@ export interface HeadsetSettingsConfig {
     ColorPickerComponent,
     FovChartComponent,
     FovPanelChartComponent,
+    FovCaChartComponent,
     CommonModule
   ],
   templateUrl: './headset-settings.component.html',

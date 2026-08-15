@@ -326,8 +326,11 @@
   <app-fov-chart [headsetType]="headsetType()" />
   </div>
 
-  <!-- Panel angle map showing how view angles land on the panels -->
-  <app-fov-panel-chart [headsetType]="headsetType()" />
+  <!-- Panel angle map showing how view angles land on the panels, with the chromatic aberration curves of the profile to its right -->
+  <div class="panel-charts-row">
+    <app-fov-panel-chart [headsetType]="headsetType()" />
+    <app-fov-ca-chart [headsetType]="headsetType()" />
+  </div>
 
   <!-- Color Tint -->
   @if(defaults.colorMultiplier) {

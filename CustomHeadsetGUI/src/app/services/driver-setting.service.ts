@@ -21,6 +21,11 @@ export type DistortionProfileFile = {
   recommendedMaxFovX?: number;
   recommendedMaxFovY?: number;
   recommendedEyeRotation?: number;
+  /** the RadialBezier curves, kept for the chromatic aberration visualizer */
+  type?: string;
+  distortions?: number[];
+  distortionsRed?: number[];
+  distortionsBlue?: number[];
   entry: DirEntry;
 };
 @Injectable({
@@ -69,6 +74,14 @@ export class DriverSettingService extends JsonSettingServiceBase<Settings> {
         }
         if (typeof parsed.recommendedEyeRotation === 'number') {
           profile.recommendedEyeRotation = parsed.recommendedEyeRotation;
+        }
+        if (typeof parsed.type === 'string') {
+          profile.type = parsed.type;
+        }
+        for (const key of ['distortions', 'distortionsRed', 'distortionsBlue'] as const) {
+          if (Array.isArray(parsed[key]) && parsed[key].every((v: unknown) => typeof v === 'number')) {
+            profile[key] = parsed[key];
+          }
         }
       } catch (e) {
         // ignore parse errors
