@@ -17,6 +17,10 @@ export type DistortionProfileEntry = {
 export type DistortionProfileFile = {
   name: string;
   device?: string | string[];
+  /** the settings this profile was calibrated for, absent when the profile has no recommendation */
+  recommendedMaxFovX?: number;
+  recommendedMaxFovY?: number;
+  recommendedEyeRotation?: number;
   entry: DirEntry;
 };
 @Injectable({
@@ -56,6 +60,15 @@ export class DriverSettingService extends JsonSettingServiceBase<Settings> {
         const parsed = JSON.parse(cleanJsonComments(content));
         if (parsed.device) {
           profile.device = parsed.device;
+        }
+        if (typeof parsed.recommendedMaxFovX === 'number') {
+          profile.recommendedMaxFovX = parsed.recommendedMaxFovX;
+        }
+        if (typeof parsed.recommendedMaxFovY === 'number') {
+          profile.recommendedMaxFovY = parsed.recommendedMaxFovY;
+        }
+        if (typeof parsed.recommendedEyeRotation === 'number') {
+          profile.recommendedEyeRotation = parsed.recommendedEyeRotation;
         }
       } catch (e) {
         // ignore parse errors
