@@ -3,6 +3,7 @@
 #include <vector>
 #include <mutex>
 #include <tuple>
+#include <cmath>
 
 #if !defined(VENDOR_PIMAX) && !defined(VENDOR_SHIFTALL)
 #define VENDOR_NEUTRAL
@@ -720,6 +721,11 @@ public:
 	double smoothAmount = 0.66;
 	// additional eye rotation offset in degrees to apply on top of the headset's eye rotation
 	double eyeRotationOffset = 0.0;
+	// the max per eye fov settings this profile was calibrated for and works best with, 0 when the profile has no recommendation
+	double recommendedMaxFovX = 0.0;
+	double recommendedMaxFovY = 0.0;
+	// the eye rotation setting this profile was calibrated for and works best with, NAN when the profile has no recommendation
+	double recommendedEyeRotation = NAN;
 };
 
 // global config object

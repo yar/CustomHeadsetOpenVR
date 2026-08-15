@@ -501,6 +501,15 @@ DistortionProfileConfig ConfigLoader::ParseDistortionConfig(std::string name){
 		if(data["eyeRotationOffset"].is_number()){
 			profile.eyeRotationOffset = data["eyeRotationOffset"].get<double>();
 		}
+		if(data["recommendedMaxFovX"].is_number()){
+			profile.recommendedMaxFovX = data["recommendedMaxFovX"].get<double>();
+		}
+		if(data["recommendedMaxFovY"].is_number()){
+			profile.recommendedMaxFovY = data["recommendedMaxFovY"].get<double>();
+		}
+		if(data["recommendedEyeRotation"].is_number()){
+			profile.recommendedEyeRotation = data["recommendedEyeRotation"].get<double>();
+		}
 		return profile;
 	}catch(const std::exception& e){
 		DriverLog("Failed to parse distortion profile: %s", e.what());
@@ -724,6 +733,16 @@ void ConfigLoader::WriteInfo(){
 			profileJson["offsetY"] = profile.offsetY;
 		}
 		profileJson["eyeRotationOffset"] = profile.eyeRotationOffset;
+		// recommendations are optional, only present when the profile declares them
+		if(profile.recommendedMaxFovX > 0){
+			profileJson["recommendedMaxFovX"] = profile.recommendedMaxFovX;
+		}
+		if(profile.recommendedMaxFovY > 0){
+			profileJson["recommendedMaxFovY"] = profile.recommendedMaxFovY;
+		}
+		if(!std::isnan(profile.recommendedEyeRotation)){
+			profileJson["recommendedEyeRotation"] = profile.recommendedEyeRotation;
+		}
 		distortionProfilesJson[profile.name] = profileJson;
 	}
 	infoFile << data.dump(1, '\t');

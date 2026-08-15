@@ -78,6 +78,24 @@
     </div>
   </div>
 
+  <!-- Recommended settings of the selected profile, only shown while the settings deviate from them -->
+  @if(profileRecommendationDeviations(); as deviations) {
+    @if(deviations.length) {
+      <div class="field">
+        <div class="note profile-recommendation">
+          <mat-icon class="warn-color">warning</mat-icon>
+          <span>
+            <span i18n>Warning: for this profile it is recommended to set</span>
+            @for(d of deviations; track d.name; let last = $last) {
+              <span> {{d.name}} <span i18n>to</span> {{d.recommended}} (<span i18n>current</span> {{d.current}}){{last ? '.' : ','}}</span>
+            }
+          </span>
+          <button mat-stroked-button (click)="applyProfileRecommendation()" i18n>Set recommended values</button>
+        </div>
+      </div>
+    }
+  }
+
   <!-- IPD -->
   @if(settings.hardwareIpd) {
   <div class="field">

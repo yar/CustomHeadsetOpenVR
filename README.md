@@ -45,6 +45,9 @@ You do not need to do this if you installed the driver with the GUI.
 Run `custom-headset-gui.exe` to configure settings.
 Almost all settings will be immediately applied without restarting SteamVR.  
 
+### Field of view reporting
+Some distortion profiles carry recommended Max FOV and eye rotation values, shown with the profile; entering them displays the full field the profile was calibrated for. When comparing this driver with the Pimax OpenVR driver in utilities such as hmdq, the reported values differ even where the displayed image is the same, because the two drivers describe the projection differently. The Pimax driver reports the complete render frustum: a bounding box of everything the panel can display in any direction, with a symmetric vertical extent, and, since it renders with parallel projections, with the eye rotation folded into the frustum. This driver reports the region in which all three color channels land on the panel, keeps the vertical asymmetry of the optics, and reports the eye rotation separately. The second convention produces smaller reported angles and smaller render targets at the same pixel density, while the field that reaches the display differs only by a small amount at the far corners of the view.
+
 
 ## Donations and Affiliates
 If you find this project helpful, consider supporting it through donations or using the affiliate links below:
