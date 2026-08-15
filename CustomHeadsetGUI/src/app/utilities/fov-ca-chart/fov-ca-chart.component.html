@@ -1,0 +1,45 @@
+<div class="ca-chart-card">
+  <div class="ca-chart-header">
+    <span class="ca-chart-title" i18n>Chromatic Aberration Correction</span>
+    <span class="ca-chart-hint" i18n>Red and blue offsets of the selected profile</span>
+  </div>
+  @if(chart(); as vm) {
+    <div class="ca-chart-body">
+      @for(facet of [vm.offset, vm.pixels]; track $index) {
+        <div class="facet">
+          <div class="facet-title">
+            @if($index === 0) { <span i18n>Red/blue correction relative to green, in percent</span> }
+            @else { <span i18n>Resulting shift in panel pixels</span> }
+          </div>
+          <svg [attr.viewBox]="facet.viewBox" preserveAspectRatio="xMidYMid meet">
+            @for(tick of facet.yTicks; track $index) {
+              <line class="grid" [attr.x1]="plotLeft" [attr.x2]="plotRight" [attr.y1]="tick.y" [attr.y2]="tick.y" />
+              <text class="tick-label y" [attr.x]="plotLeft - 4" [attr.y]="tick.y + 3">{{tick.label}}</text>
+            }
+            @for(tick of facet.xTicks; track $index) {
+              <text class="tick-label x" [attr.x]="tick.x" [attr.y]="plotBottom + 14">{{tick.label}}</text>
+            }
+            <line class="axis" [attr.x1]="plotLeft" [attr.x2]="plotRight" [attr.y1]="facet.zeroY" [attr.y2]="facet.zeroY" />
+            @if(edgeX(vm); as ex) {
+              <line class="edge" [attr.x1]="ex" [attr.x2]="ex" [attr.y1]="plotTop" [attr.y2]="plotBottom" />
+              <text class="edge-label" [attr.x]="ex - 3" [attr.y]="plotTop + 9" i18n>panel edge</text>
+            }
+            <path class="curve red" [attr.d]="facet.redPath" />
+            <path class="curve blue" [attr.d]="facet.bluePath" />
+            @for(node of facet.redNodes; track $index) {
+              <circle class="node red" [attr.cx]="node.x" [attr.cy]="node.y" r="3" />
+            }
+            @for(node of facet.blueNodes; track $index) {
+              <circle class="node blue" [attr.cx]="node.x" [attr.cy]="node.y" r="3" />
+            }
+          </svg>
+        </div>
+      }
+    </div>
+    <div class="ca-chart-notes">
+      <span class="note"><span i18n>Profile:</span> {{vm.profileName}}</span>
+    </div>
+  } @else {
+    <div class="ca-chart-empty">{{unavailableReason()}}</div>
+  }
+</div>

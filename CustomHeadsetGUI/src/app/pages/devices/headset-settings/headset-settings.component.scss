@@ -67,3 +67,22 @@
         margin-top: 0.5rem;
     }
 }
+
+// the panel angle map with the chromatic aberration curves of the profile to its right
+.panel-charts-row {
+    display: flex;
+    align-items: stretch;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    app-fov-panel-chart {
+        flex: 1 1 36rem;
+        min-width: 0;
+    }
+
+    app-fov-ca-chart {
+        flex: 1 1 22rem;
+        min-width: 20rem;
+        max-width: 32rem;
+    }
+}
