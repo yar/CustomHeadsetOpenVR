@@ -3,8 +3,8 @@
   <div class="fov-chart-header">
     <span class="fov-chart-title" i18n>FOV Preview</span>
     <span class="legend"><span class="legend-left" i18n>Left eye</span> / <span class="legend-right" i18n>Right eye</span></span>
-    @if(notLive()) {
-      <span class="stale-badge" i18n>not live — last known data</span>
+    @if(data(); as source) {
+      <app-chart-source-badge [source]="source.source" />
     }
   </div>
   <div class="fov-chart-body">
@@ -56,8 +56,7 @@
       @if(vm.profileName) {
         <div class="metric"><span class="metric-name" i18n>Profile</span><span class="metric-value">{{vm.profileName}}</span></div>
       }
-      <div class="disclaimer" i18n>This is a simulation calculated from the driver FOV data. The full extent shown may not always be physically visible in the headset.</div>
-      <div class="disclaimer" i18n>Distortion related changes only update while the headset is running under this driver.</div>
+      <div class="disclaimer" i18n>Calculated from the projections the profile gives each eye and the hidden area. The full extent shown may not always be physically visible in the headset.</div>
     </div>
   </div>
 </div>

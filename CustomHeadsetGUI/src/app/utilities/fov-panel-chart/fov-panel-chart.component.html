@@ -3,8 +3,8 @@
   <div class="panel-chart-header">
     <span class="panel-chart-title" i18n>Panel Angle Map</span>
     <span class="panel-chart-hint" i18n>Where view angles land on the panels</span>
-    @if(notLive()) {
-      <span class="stale-badge" i18n>not live — last known data</span>
+    @if(data(); as source) {
+      <app-chart-source-badge [source]="source.source" />
     }
     <span class="spacer"></span>
     <div class="channel-picker">
@@ -56,11 +56,10 @@
     }
   </div>
   <app-panel-chart-legend [showHiddenArea]="hasHiddenArea()" [showForward]="true" />
-  <div class="panel-chart-notes">
-    @if(sampledFromProfile()) {
-      <span class="note"><span i18n>Sampled from profile:</span> {{sampledFromProfile()}}</span>
-    }
-    <span class="note" i18n>This is a simulation from driver data and only updates while the headset is running under this driver.</span>
-  </div>
+  @if(profileName()) {
+    <div class="panel-chart-notes">
+      <span class="note"><span i18n>Profile:</span> {{profileName()}}</span>
+    </div>
+  }
 </div>
 }
