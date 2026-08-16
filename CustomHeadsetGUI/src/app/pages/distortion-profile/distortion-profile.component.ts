@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTableModule } from '@angular/material/table';
+import { MatMenuModule } from '@angular/material/menu';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { copyFile, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { basename, join } from '@tauri-apps/api/path';
@@ -15,6 +16,8 @@ import { BuiltInDistortionProfile, DriverInfo } from '../../services/JsonFileDef
 import { cleanJsonComments } from '../../helpers';
 import { SystemReadyComponent } from '../../utilities/system-ready/system-ready.component';
 import { DistortionProfileDisplayNames } from '../devices/DeviceConfigComponentBase';
+import { ChartCompareService } from '../../services/chart-compare.service';
+import { HeadsetCatalogEntry } from '../../utilities/distortion/headset-catalog';
 
 export interface ProfileInfo {
   name: string;
@@ -39,6 +42,7 @@ export interface ProfileInfo {
     MatIconModule,
     MatTooltipModule,
     MatTableModule,
+    MatMenuModule,
     SystemReadyComponent
   ],
   templateUrl: './distortion-profile.component.html',
@@ -56,7 +60,8 @@ export class DistortionProfileComponent {
     public dss: DriverSettingService,
     private dis: DriverInfoService,
     private ps: PathsService,
-    private dialog: DialogService
+    private dialog: DialogService,
+    private chartCompare: ChartCompareService
   ) {
     effect(async () => {
       const info = (dis.values() ?? {}) as DriverInfo;
@@ -116,6 +121,18 @@ export class DistortionProfileComponent {
       this.customProfiles.set(customEntries);
       this.loaded.set(true);
     });
+  }
+
+  /** the headsets a profile can be compared on: the ones it is made for, or every headset the Charts tab knows when it names none */
+  compareTargets(profile: ProfileInfo): HeadsetCatalogEntry[] {
+    const devices = profile.device ? (Array.isArray(profile.device) ? profile.device : [profile.device]) : [];
+    const catalog = this.chartCompare.headsets;
+    return devices.length ? catalog.filter(h => devices.includes(h.device)) : catalog;
+  }
+
+  /** add the profile on a headset to the Charts tab and go there */
+  compare(profile: ProfileInfo, target: HeadsetCatalogEntry) {
+    this.chartCompare.open(target.headsetType, profile.name, this.chartCompare.chartKind());
   }
 
   formatDate(timestamp?: number): string {

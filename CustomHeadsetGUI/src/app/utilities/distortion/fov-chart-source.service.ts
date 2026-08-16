@@ -26,6 +26,8 @@ export type FovChartData = {
   config: BaseHeadsetConfig;
   /** display name of the profile the data belongs to */
   profileName: string;
+  /** the profile's name as selected in the settings */
+  profileId: string;
 };
 
 type CacheEntry = {
@@ -37,10 +39,10 @@ type CacheEntry = {
 };
 
 /** the settings a chart depends on, so a change of any of them makes the data object new */
-function chartConfigKey(config: BaseHeadsetConfig): string {
+function chartConfigKey(config: BaseHeadsetConfig, profileName: string): string {
   const ham = config.hiddenArea;
   return [
-    config.distortionProfile, config.resolutionX, config.resolutionY, config.displayRotation, config.maxFovX, config.maxFovY,
+    profileName, config.resolutionX, config.resolutionY, config.displayRotation, config.maxFovX, config.maxFovY,
     config.fovZoom, config.flatFovZoom, config.distortionZoom, config.chromaticAberrationScaleRed, config.chromaticAberrationScaleBlue,
     config.fovClamping, config.fovBurnInPrevention, config.disableEye, config.disableEyeDecreaseFov, config.eyeRotation,
     config.renderResolutionMultiplierX, config.renderResolutionMultiplierY,
@@ -67,7 +69,9 @@ export class FovChartSourceService {
   /** whether the driver is running under SteamVR right now, from the age of its diagnostic file */
   private steamVRRunning = signal(false);
   private pullingRef = DeviceConfigComponentBase.steamVRStatePulling.createRef(running => this.steamVRRunning.set(running));
-  private cache = new Map<HeadsetType, CacheEntry>();
+  /** by headset type and profile name, bounded so tiles of many profiles do not grow it forever */
+  private cache = new Map<string, CacheEntry>();
+  private static readonly CACHE_LIMIT = 32;
 
   constructor() {
     DeviceConfigComponentBase.ensureDiagnosticPath(this.ps.diagnosticPath);
@@ -77,9 +81,11 @@ export class FovChartSourceService {
   /**
    * The chart data of a headset tab, or undefined when there is nothing to show. Reads the driver info,
    * settings and sampling signals, so a computed calling this tracks them; the returned object only
-   * changes when something it depends on changed.
+   * changes when something it depends on changed. A profile other than the one selected on the tab
+   * can be asked for, it is evaluated with the tab's settings (and is live only if it happens to be
+   * the one the driver runs).
    */
-  data(headsetType: HeadsetType): FovChartData | undefined {
+  data(headsetType: HeadsetType, profileOverride?: string | null): FovChartData | undefined {
     const info = this.dis.values();
     const settings = this.dss.values();
     const field = settingsFieldByHeadsetType[headsetType];
@@ -87,16 +93,18 @@ export class FovChartSourceService {
     if (!config) {
       return undefined;
     }
-    const profile = this.lookup.resolve(config.distortionProfile);
-    const configKey = chartConfigKey(config);
+    const profileName = profileOverride ?? config.distortionProfile;
+    const profile = this.lookup.resolve(profileName);
+    const cacheKey = `${headsetType}|${profileName}`;
+    const configKey = chartConfigKey(config, profileName);
     const profileKey = JSON.stringify(profile.definition);
     const connected = info?.connectedHeadset === headsetType;
     const running = this.steamVRRunning();
-    // the driver's sampling, when it belongs to this headset and the profile selected on the tab
+    // the driver's sampling, when it belongs to this headset and the profile asked for
     const written = this.fvs.values();
     const sampling = written && written.gridSize
       && (written.headsetType === undefined || written.headsetType === headsetType)
-      && (written.distortionProfile === undefined || written.distortionProfile === config.distortionProfile)
+      && (written.distortionProfile === undefined || written.distortionProfile === profileName)
       ? written : undefined;
     const resolution = info?.resolution;
 
@@ -108,26 +116,38 @@ export class FovChartSourceService {
     } else if (connected && resolution && sampling) {
       source = 'lastKnown';
     } else {
-      this.cache.delete(headsetType);
+      this.cache.delete(cacheKey);
       return undefined;
     }
 
-    const previous = this.cache.get(headsetType);
+    const previous = this.cache.get(cacheKey);
     if (source === 'simulated') {
       if (previous && previous.data.source === 'simulated' && previous.configKey === configKey && previous.profileKey === profileKey) {
         return previous.data;
       }
-      const evaluation = evaluateDistortion(profile.definition, config, { headsetType, distortionProfile: config.distortionProfile });
-      const data: FovChartData = { source, resolution: evaluation.resolution, sampling: evaluation.sampling, config, profileName: profile.displayName };
-      this.cache.set(headsetType, { data, configKey, profileKey, resolution: undefined, sampling: undefined });
+      const evaluation = evaluateDistortion(profile.definition, config, { headsetType, distortionProfile: profileName });
+      const data: FovChartData = { source, resolution: evaluation.resolution, sampling: evaluation.sampling, config, profileName: profile.displayName, profileId: profileName };
+      this.remember(cacheKey, { data, configKey, profileKey, resolution: undefined, sampling: undefined });
       return data;
     }
     if (previous && previous.data.source === source && previous.configKey === configKey && previous.profileKey === profileKey
       && previous.resolution === resolution && previous.sampling === sampling) {
       return previous.data;
     }
-    const data: FovChartData = { source, resolution: resolution!, sampling, config, profileName: profile.displayName };
-    this.cache.set(headsetType, { data, configKey, profileKey, resolution, sampling });
+    const data: FovChartData = { source, resolution: resolution!, sampling, config, profileName: profile.displayName, profileId: profileName };
+    this.remember(cacheKey, { data, configKey, profileKey, resolution, sampling });
     return data;
+  }
+
+  private remember(key: string, entry: CacheEntry): void {
+    this.cache.delete(key);
+    this.cache.set(key, entry);
+    if (this.cache.size > FovChartSourceService.CACHE_LIMIT) {
+      // the map keeps insertion order, the oldest entry is first
+      const oldest = this.cache.keys().next().value;
+      if (oldest !== undefined) {
+        this.cache.delete(oldest);
+      }
+    }
   }
 }

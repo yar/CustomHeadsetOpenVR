@@ -27,6 +27,10 @@ export class AppComponent {
       route: '/distortion-profile',
     },
     {
+      name: $localize`Charts`,
+      route: '/charts',
+    },
+    {
       name: $localize`App Settings`,
       route: '/app-settings'
     }

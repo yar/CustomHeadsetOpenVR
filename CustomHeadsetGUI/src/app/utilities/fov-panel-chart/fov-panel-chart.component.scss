@@ -217,3 +217,15 @@ svg {
         stroke-width: 0.012;
     }
 }
+
+// on the Charts tab the panels share the tile's width, capped by the window height
+:host-context(.charts-page) .panel-chart-body .panel {
+    flex: 1 1 0;
+    min-width: 0;
+
+    svg {
+        width: 100%;
+        height: auto;
+        max-height: 78vh;
+    }
+}

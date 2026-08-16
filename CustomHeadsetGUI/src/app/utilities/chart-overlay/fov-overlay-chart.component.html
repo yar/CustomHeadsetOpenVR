@@ -1,0 +1,53 @@
+@if(chart(); as vm) {
+<div class="overlay-card">
+  <div class="overlay-header">
+    <span class="overlay-title" i18n>FOV Preview</span>
+    <span class="overlay-hint" i18n>The combined field of view of both eyes, one outline per entry</span>
+  </div>
+  <div class="overlay-body">
+    <svg [attr.viewBox]="vm.backdrop.viewBox" preserveAspectRatio="xMidYMid meet">
+      <circle class="chart-disc" cx="0" cy="0" [attr.r]="vm.backdrop.maxRing" />
+      @for(ring of vm.backdrop.rings; track ring) {
+        <circle class="ring" [class.ring-major]="ring % 30 === 0" [class.ring-outer]="ring === vm.backdrop.maxRing" cx="0" cy="0" [attr.r]="ring" />
+      }
+      @for(spoke of vm.backdrop.spokes; track $index) {
+        <line class="spoke" x1="0" y1="0" [attr.x2]="spoke.x" [attr.y2]="spoke.y" />
+      }
+      @for(label of vm.backdrop.ringLabels; track $index) {
+        <text class="ring-label" [attr.transform]="'translate(' + label.x + ',' + label.y + ') rotate(' + label.rotation + ')'">{{label.text}}</text>
+      }
+      @for(row of vm.rows; track row.entry.id) {
+        @if(row.path) {
+          <path class="entry-shape" [attr.d]="row.path" [attr.stroke]="row.entry.color" [attr.fill]="row.entry.color" />
+        }
+      }
+      <path class="center-cross" d="M-3 0H3M0 -3V3" />
+    </svg>
+    <table class="metrics">
+      <thead>
+        <tr>
+          <th></th>
+          <th i18n>Horizontal</th>
+          <th i18n>Vertical</th>
+          <th i18n>Stereo overlap</th>
+          <th i18n>Sphere coverage</th>
+          <th i18n>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for(row of vm.rows; track row.entry.id) {
+          <tr>
+            <td class="entry-cell"><span class="dot" [style.background]="row.entry.color"></span>{{row.entry.label}}</td>
+            <td>{{format(row.hfov, 0)}}°</td>
+            <td>{{format(row.vfov, 0)}}°</td>
+            <td>{{format(row.overlap, 1)}}°</td>
+            <td>{{format(row.coverage, 1)}}%</td>
+            <td class="source-cell">@if(row.source) { <app-chart-source-badge [source]="row.source" /> }</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="overlay-note" i18n>Horizontal and vertical are the combined field of view of both eyes along those directions, the stereo overlap the horizontal span both eyes see, all with the eye rotation of each headset tab. The full extent shown may not always be physically visible in the headset.</div>
+</div>
+}
