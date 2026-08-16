@@ -5,6 +5,9 @@
     <span class="legend"><span class="legend-left" i18n>Left eye</span> / <span class="legend-right" i18n>Right eye</span></span>
     @if(data(); as source) {
       <app-chart-source-badge [source]="source.source" />
+      @if(showCompare()) {
+        <app-chart-compare-button [headsetType]="headsetType()" [profile]="source.profileId" kind="fov" />
+      }
     }
   </div>
   <div class="fov-chart-body">

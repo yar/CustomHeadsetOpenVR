@@ -1,0 +1,82 @@
+@if(chart(); as vm) {
+<div class="overlay-card">
+  <div class="overlay-header">
+    <span class="overlay-title" i18n>Panel Angle Map</span>
+    <span class="overlay-hint" i18n>Green channel contours of each entry on the panels</span>
+  </div>
+  <div class="overlay-body">
+    @for(eye of [vm.left, vm.right]; track $index) {
+      @if(eye) {
+        <div class="panel">
+          <svg [attr.viewBox]="eye.viewBox" preserveAspectRatio="xMidYMid meet">
+            @if(vm.samePanels) {
+              <rect class="panel-rect" [attr.x]="-eye.halfWidth" [attr.y]="-eye.halfHeight"
+                [attr.width]="eye.halfWidth * 2" [attr.height]="eye.halfHeight * 2" />
+            } @else {
+              <!-- panels of different size or rotation: one background over their union, each outlined in its entry's color around the shared center -->
+              <rect class="panel-fill" [attr.x]="-eye.halfWidth" [attr.y]="-eye.halfHeight"
+                [attr.width]="eye.halfWidth * 2" [attr.height]="eye.halfHeight * 2" />
+              @for(drawing of eye.drawings; track drawing.entry.id) {
+                <rect class="entry-panel" [attr.stroke]="drawing.entry.color" [attr.x]="-drawing.halfWidth" [attr.y]="-drawing.halfHeight"
+                  [attr.width]="drawing.halfWidth * 2" [attr.height]="drawing.halfHeight * 2" />
+              }
+            }
+            <path class="panel-center" [attr.d]="'M' + (-eye.halfWidth) + ' 0H' + eye.halfWidth + 'M0 ' + (-eye.halfHeight) + 'V' + eye.halfHeight" />
+            @for(drawing of eye.drawings; track drawing.entry.id) {
+              @for(contour of drawing.contours; track $index) {
+                <path class="contour" [attr.d]="contour" [attr.stroke]="drawing.entry.color" />
+              }
+              <path class="boundary" [attr.d]="drawing.boundary" [attr.stroke]="drawing.entry.color" />
+              <path class="cross" [attr.stroke]="drawing.entry.color"
+                [attr.d]="'M' + (drawing.center.x - 0.05) + ' ' + drawing.center.y + 'H' + (drawing.center.x + 0.05) + 'M' + drawing.center.x + ' ' + (drawing.center.y - 0.05) + 'V' + (drawing.center.y + 0.05)" />
+              @if(drawing.forward; as forward) {
+                <path class="forward" [attr.stroke]="drawing.entry.color"
+                  [attr.d]="'M' + (forward.x - 0.035) + ' ' + (forward.y - 0.035) + 'L' + (forward.x + 0.035) + ' ' + (forward.y + 0.035) + 'M' + (forward.x - 0.035) + ' ' + (forward.y + 0.035) + 'L' + (forward.x + 0.035) + ' ' + (forward.y - 0.035)" />
+              }
+            }
+            @if(vm.sameHeadset) {
+              @if(sharedHam(eye); as ham) {
+                <path class="ham" [attr.d]="ham" />
+              }
+            } @else {
+              @for(drawing of eye.drawings; track drawing.entry.id) {
+                @if(drawing.hamPath) {
+                  <path class="ham entry-ham" [attr.d]="drawing.hamPath" [attr.stroke]="drawing.entry.color" />
+                }
+              }
+            }
+            @for(label of eye.labels; track $index) {
+              <text class="contour-label" [attr.x]="label.x" [attr.y]="label.y - 0.02">{{label.text}}</text>
+            }
+          </svg>
+          <div class="panel-name">
+            @if($index === 0) { <span class="name-left" i18n>Left panel</span> }
+            @else { <span class="name-right" i18n>Right panel</span> }
+          </div>
+        </div>
+      }
+    }
+  </div>
+  <div class="overlay-legend">
+    @for(drawing of (vm.left ?? vm.right)!.drawings; track drawing.entry.id) {
+      <span class="legend-entry"><span class="dot" [style.background]="drawing.entry.color"></span>{{drawing.entry.label}} <app-chart-source-badge [source]="drawing.source" /></span>
+    }
+  </div>
+  <app-panel-chart-legend [showHiddenArea]="hasHiddenArea()" [showForward]="true" />
+  @if(vm.missing.length) {
+    <div class="overlay-note">
+      <span i18n>Not drawn, no sampling available:</span>
+      @for(entry of vm.missing; track entry.id) { <span class="missing">{{entry.label}}</span> }
+    </div>
+  }
+  @if((vm.left ?? vm.right)!.drawings.length > 1) {
+    <div class="overlay-note" i18n>The degree labels belong to the first entry.</div>
+  }
+  @if(!vm.samePanels) {
+    <div class="overlay-note" i18n>The entries have panels of different size or rotation: each panel outline is drawn in its entry's color, all around the shared center.</div>
+  }
+  @if(hasHiddenArea() && !vm.sameHeadset) {
+    <div class="overlay-note" i18n>The hidden area mesh cuts are those of each entry's headset tab, in the entry's color.</div>
+  }
+</div>
+}

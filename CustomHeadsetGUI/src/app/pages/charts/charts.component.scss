@@ -1,0 +1,159 @@
+:host {
+    display: block;
+    padding: 1rem;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+
+    .spacer {
+        flex: 1 1 auto;
+    }
+
+    button mat-icon {
+        margin-right: 0.25rem;
+    }
+}
+
+.add-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem 1.25rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 8px;
+
+    // a label above each selector
+    .add-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        min-width: 0;
+
+        .add-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--mat-sys-on-surface-variant);
+        }
+    }
+
+    .headset-field {
+        flex: 0 1 16rem;
+        min-width: 12rem;
+    }
+
+    .profile-field {
+        flex: 1 1 22rem;
+        min-width: 16rem;
+    }
+
+    .add-button {
+        margin-bottom: 0.15rem;
+    }
+
+    .add-hint {
+        flex: 1 1 100%;
+        font-size: 0.8rem;
+        color: var(--mat-sys-on-surface-variant);
+    }
+}
+
+.incompatible {
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 0.85em;
+}
+
+.dot {
+    display: inline-block;
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    flex: none;
+}
+
+.entries {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+
+    .entry-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.15rem 0.3rem 0.15rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid var(--mat-sys-outline-variant);
+        font-size: 0.9rem;
+
+        .remove {
+            display: inline-flex;
+            align-items: center;
+            border: none;
+            background: none;
+            padding: 0.1rem;
+            cursor: pointer;
+            color: var(--mat-sys-on-surface-variant);
+            border-radius: 50%;
+
+            &:hover {
+                color: var(--mat-sys-on-surface);
+                background: var(--mat-sys-surface-container-high);
+            }
+
+            mat-icon {
+                font-size: 16px;
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+}
+
+.overlay {
+    margin-top: 0.5rem;
+}
+
+.empty {
+    margin-top: 1.5rem;
+    color: var(--mat-sys-on-surface-variant);
+    max-width: 48rem;
+}
+
+.tiles {
+    display: grid;
+    // auto-fit: fewer tiles than columns spread out instead of leaving empty columns
+    grid-template-columns: repeat(auto-fit, minmax(26rem, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+
+    // the panel angle map is two panels wide
+    &.wide {
+        grid-template-columns: repeat(auto-fit, minmax(36rem, 1fr));
+    }
+
+    .tile {
+        min-width: 0;
+
+        .tile-title {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .tile-note {
+            padding: 1rem;
+            border: 1px dashed var(--mat-sys-outline-variant);
+            border-radius: 8px;
+            color: var(--mat-sys-on-surface-variant);
+            font-size: 0.9rem;
+        }
+    }
+}

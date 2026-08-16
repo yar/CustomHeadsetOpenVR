@@ -1,0 +1,115 @@
+// the same WimFOV inspired look as the chromatic aberration chart of a headset tab
+$wimfov-background: #FFFFE0;
+$wimfov-text: #1a1a1a;
+
+:host {
+    display: block;
+}
+
+.overlay-card {
+    padding: 8px 16px 8px 16px;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    background: $wimfov-background;
+    color: $wimfov-text;
+}
+
+.overlay-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    .overlay-title {
+        font-weight: 700;
+    }
+
+    .overlay-hint {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+}
+
+.overlay-body {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    .facet {
+        flex: 1 1 24rem;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+
+        .facet-title {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 348 / 200;
+        }
+    }
+}
+
+.overlay-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+
+    .dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 6px;
+        vertical-align: -1px;
+    }
+}
+
+.overlay-note {
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #444444;
+
+    .missing {
+        margin-left: 6px;
+        font-weight: 600;
+    }
+}
+
+svg {
+    .grid {
+        stroke: rgba(0, 0, 0, 0.12);
+        stroke-width: 1;
+    }
+
+    .axis {
+        stroke: rgba(0, 0, 0, 0.5);
+        stroke-width: 1;
+    }
+
+    .tick-label {
+        font-size: 9px;
+        fill: rgba(0, 0, 0, 0.7);
+
+        &.y {
+            text-anchor: end;
+        }
+
+        &.x {
+            text-anchor: middle;
+        }
+    }
+
+    .curve {
+        fill: none;
+        stroke-width: 2;
+    }
+}

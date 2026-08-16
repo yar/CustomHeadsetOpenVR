@@ -223,6 +223,13 @@ export type AppSetting = {
   installMethod: 'auto' | 'register' | 'copy';
   /** seconds between pressing Recenter and the request going to the driver, time to put the headset on */
   recenterDelaySeconds: number;
+  /** the comparison shown on the Charts tab, kept between sessions; absent until something was compared */
+  chartCompare?: ChartCompareSetting;
+}
+export type ChartCompareSetting = {
+  entries: { headsetType: number; profile: string }[];
+  chartKind: 'fov' | 'panel' | 'ca';
+  mode: 'tiles' | 'overlay';
 }
 
 export const HeadsetType = {
