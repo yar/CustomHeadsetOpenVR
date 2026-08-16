@@ -1,0 +1,120 @@
+{
+ "about": "Cases for tools/distortion-fixtures/harness.cpp, chosen to cover the code paths the live driver fixture (rotation 2, clamping on, no horizontal offset) does not: every display rotation, horizontal offsets, FOV clamping off, the zooms, the chromatic aberration scales, the render resolution multipliers, a disabled eye, legacy smoothing and the none profile fallback.",
+ "sampleStride": 4,
+ "cases": [
+  {
+   "name": "meganex8k-default",
+   "headset": "MeganeX8K",
+   "profile": "MeganeX8K Default"
+  },
+  {
+   "name": "dream-air-default",
+   "headset": "DreamAir",
+   "profile": "Dream Air Default"
+  },
+  {
+   "name": "crystal-super-micro-oled-like-pimax",
+   "headset": "CrystalSuperMicroOLED",
+   "profile": "Crystal Super micro-OLED like Pimax",
+   "config": {
+    "maxFovX": 98.2,
+    "maxFovY": 87.1,
+    "eyeRotation": 2
+   }
+  },
+  {
+   "name": "crystal-super-ultrawide-default",
+   "headset": "CrystalSuperUltrawide",
+   "profile": "Crystal Super Ultrawide Default"
+  },
+  {
+   "name": "crystal-og-like-pimax",
+   "headset": "CrystalOG",
+   "profile": "Crystal like Pimax",
+   "config": {
+    "maxFovX": 92.3,
+    "maxFovY": 93.1
+   }
+  },
+  {
+   "name": "dream-air-se-default",
+   "headset": "DreamAirSE",
+   "profile": "Dream Air SE Default"
+  },
+  {
+   "name": "crystal-super-50ppd-zooms",
+   "headset": "CrystalSuper50PPD",
+   "profile": "Crystal Super 50ppd Default",
+   "config": {
+    "displayRotation": 0,
+    "fovZoom": 1.1,
+    "flatFovZoom": 0.9,
+    "distortionZoom": 1.05,
+    "chromaticAberrationScaleRed": 1.3,
+    "chromaticAberrationScaleBlue": 0.5,
+    "maxFovX": 100,
+    "maxFovY": 100,
+    "renderResolutionMultiplierX": 1.2,
+    "renderResolutionMultiplierY": 0.9,
+    "eyeRotation": 4
+   }
+  },
+  {
+   "name": "meganex8k-legacy-smoothing-disabled-eye",
+   "headset": "MeganeX8K",
+   "profile": {
+    "type": "RadialBezier",
+    "distortions": [
+     0.0,
+     0.0,
+     10.0,
+     24.77952472,
+     20.0,
+     48.32328161,
+     30.0,
+     69.9136628,
+     35.0,
+     79.99462488,
+     40.0,
+     89.06057112,
+     45.0,
+     96.29634484,
+     48.3073,
+     100.0
+    ],
+    "distortionsRed": [
+     0.0,
+     0.5,
+     47.5,
+     0.5
+    ],
+    "distortionsBlue": [
+     0.0,
+     -0.42,
+     47.5,
+     -0.42
+    ],
+    "offsetX": 1.5,
+    "offsetY": -2.0,
+    "eyeRotationOffset": 0.0,
+    "legacySmoothing": true,
+    "smoothAmount": 0.5
+   },
+   "config": {
+    "disableEye": 1,
+    "disableEyeDecreaseFov": true,
+    "eyeRotation": 1.5
+   }
+  },
+  {
+   "name": "none-profile",
+   "headset": "DreamAir",
+   "profile": {
+    "type": "None"
+   },
+   "config": {
+    "fovZoom": 1.2
+   }
+  }
+ ]
+}
