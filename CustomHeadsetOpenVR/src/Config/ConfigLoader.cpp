@@ -48,6 +48,9 @@ void parseBaseHeadsetConfig(json headsetData, Config::BaseHeadsetConfig& headset
 	if(headsetData["horizontalIPDOffset"].is_number()){
 		headsetConfig.horizontalIPDOffset = headsetData["horizontalIPDOffset"].get<double>();
 	}
+	if(headsetData["viewpointDepthCorrection"].is_number()){
+		headsetConfig.viewpointDepthCorrection = headsetData["viewpointDepthCorrection"].get<double>();
+	}
 	if(headsetData["blackLevel"].is_number()){
 		headsetConfig.blackLevel = headsetData["blackLevel"].get<double>();
 	}
@@ -553,6 +556,7 @@ ordered_json baseHeadsetInfo(Config::BaseHeadsetConfig& headsetConfig){
 		{"ipdOffset", headsetConfig.ipdOffset},
 		{"hardwareIpd", headsetConfig.hardwareIpd},
 		{"horizontalIPDOffset", headsetConfig.horizontalIPDOffset},
+		{"viewpointDepthCorrection", headsetConfig.viewpointDepthCorrection},
 		{"blackLevel", headsetConfig.blackLevel},
 		{"colorMultiplier", {
 			{"r", headsetConfig.colorMultiplier.r},

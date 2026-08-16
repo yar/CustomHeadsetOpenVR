@@ -108,6 +108,8 @@ export type BaseHeadsetConfig = {
   ipd: number;
   ipdOffset: number;
   horizontalIPDOffset: number;
+  /** mm to move the viewpoint towards the back of the head, negative moves it forward */
+  viewpointDepthCorrection: number;
   blackLevel: number;
   colorMultiplier: LinearColor;
   distortionProfile: string;
