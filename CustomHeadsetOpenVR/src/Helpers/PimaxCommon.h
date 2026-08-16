@@ -6,15 +6,10 @@
 #include <thread>
 #include <shared_mutex>
 
-// PVR SDK is Windows-only
-#if __has_include("PVR.h")
-#ifdef _WIN32
+#include "PvrAvailability.h"
+#ifdef PVR_EXISTS
 	#include <PVR.h>
 	#include <PVR_API.h>
-	#ifndef PVR_EXISTS
-		#define PVR_EXISTS
-	#endif
-#endif
 #endif
 
 struct PimaxInfo {

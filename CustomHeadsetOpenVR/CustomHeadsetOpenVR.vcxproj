@@ -36,6 +36,7 @@
     <ClInclude Include="src\Helpers\FovVisualization.h" />
     <ClInclude Include="src\Helpers\LighthouseGeometry.h" />
     <ClInclude Include="src\Helpers\PimaxCommon.h" />
+    <ClInclude Include="src\Helpers\PvrAvailability.h" />
     <ClInclude Include="src\HiddenArea\HiddenArea.h" />
     <ClInclude Include="src\Helpers\AAPVRBlocker.h" />
   </ItemGroup>

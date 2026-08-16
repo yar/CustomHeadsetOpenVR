@@ -75,6 +75,9 @@
     <ClInclude Include="src\Helpers\PimaxCommon.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Helpers\PvrAvailability.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="src\Config\Config.h">
       <Filter>Source Files</Filter>
     </ClInclude>

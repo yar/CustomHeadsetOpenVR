@@ -1,5 +1,6 @@
 #include "DistortionProfileConstructor.h"
 #include "RadialBezierDistortionProfile.h"
+#include "../Helpers/PvrAvailability.h"
 #ifdef PVR_EXISTS
 #include "PimaxDistortionProfile.h"
 #endif

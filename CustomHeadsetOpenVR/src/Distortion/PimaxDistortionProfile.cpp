@@ -1,3 +1,4 @@
+#include "../Helpers/PvrAvailability.h"
 #ifdef PVR_EXISTS
 
 #include "PimaxDistortionProfile.h"
