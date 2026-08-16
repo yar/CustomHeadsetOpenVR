@@ -455,6 +455,69 @@ bool PopulateBuiltInDistortionProfiles(){
 	};
 	builtInDistortionProfiles[dreamAirLikePimax.name] = dreamAirLikePimax;
 
+	DistortionProfileConfig crystalOGLikePimax = {};
+	crystalOGLikePimax.name = "Crystal like Pimax";
+	crystalOGLikePimax.device = {"CrystalOG"};
+	crystalOGLikePimax.modifiedTime = 0;
+	crystalOGLikePimax.description = "Distortion profile for the Pimax Crystal fitted from a capture of the distortion mesh rendered by the Pimax compositor, including its chromatic aberration correction. The optical center sits 7.0% above the panel center, so the field reaches noticeably further down than up, and the profile follows the capture within 0.1 degrees. The eye rotation offset brings the configured 4 degrees to the 5 degree cant of the captured eye pose. Set Max FOV to 92.3x93.1 to render exactly the field the native profile shows.";
+	crystalOGLikePimax.author = "Pimax";
+	crystalOGLikePimax.creationDate = 1786838400.0;
+	crystalOGLikePimax.type = "RadialBezier";
+	crystalOGLikePimax.offsetX = 0.0f;
+	crystalOGLikePimax.offsetY = 7.04f;
+	crystalOGLikePimax.eyeRotationOffset = 1.0;
+	crystalOGLikePimax.recommendedMaxFovX = 92.3;
+	crystalOGLikePimax.recommendedMaxFovY = 93.1;
+	// the capture's eye pose is 5 degrees, the default configuration has 4
+	crystalOGLikePimax.recommendedEyeRotation = 4.0;
+	crystalOGLikePimax.distortions = {
+		0.00, 0.000,
+		2.50, 6.066,
+		5.00, 12.177,
+		10.0, 24.230,
+		15.0, 36.183,
+		20.0, 47.859,
+		25.0, 59.140,
+		30.0, 69.980,
+		35.0, 80.123,
+		40.0, 89.485,
+		45.0, 97.878,
+		47.5, 101.621,
+		50.0, 105.079,
+		52.5, 108.201,
+		55.0, 110.749,
+		57.5, 113.563
+	};
+	crystalOGLikePimax.distortionsRed = {
+		0.00, 0.52,
+		5.00, 0.54,
+		10.0, 0.55,
+		15.0, 0.53,
+		20.0, 0.51,
+		25.0, 0.50,
+		30.0, 0.47,
+		35.0, 0.43,
+		40.0, 0.38,
+		45.0, 0.33,
+		50.0, 0.26,
+		55.0, 0.19
+	};
+	crystalOGLikePimax.distortionsBlue = {
+		0.00, -0.91,
+		5.00, -0.92,
+		10.0, -0.92,
+		15.0, -0.91,
+		20.0, -0.89,
+		25.0, -0.86,
+		30.0, -0.81,
+		35.0, -0.74,
+		40.0, -0.66,
+		45.0, -0.56,
+		50.0, -0.45,
+		55.0, -0.33
+	};
+	builtInDistortionProfiles[crystalOGLikePimax.name] = crystalOGLikePimax;
+
 
 	DistortionProfileConfig pimaxBuiltin = {};
 	pimaxBuiltin.name = "Pimax Builtin";
