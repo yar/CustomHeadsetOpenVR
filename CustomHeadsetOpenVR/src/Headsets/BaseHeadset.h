@@ -83,7 +83,7 @@ public:
 	// helper function to calculate the 100% render resolution
 	void GetRecommendedRenderTargetSize(uint32_t* renderWidth, uint32_t* renderHeight);
 	
-	void SetIPD(float ipd, float angle = 0, float horizontalOffset = 0);
+	void SetIPD(float ipd, float angle = 0, float horizontalOffset = 0, float depthOffset = 0);
 	
 	// Use this to set proximity consistently. This will time out after five seconds and fall back to the default movement. Now is optional.
 	void SetProximity(bool inProximity, double now = 0);
