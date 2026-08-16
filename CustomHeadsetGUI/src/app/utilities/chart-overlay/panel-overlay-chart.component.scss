@@ -1,0 +1,174 @@
+// the same WimFOV inspired look as the panel angle map of a headset tab
+$wimfov-background: #FFFFE0;
+$wimfov-text: #1a1a1a;
+$wimfov-red: #FF0000;
+$wimfov-blue: #0000FF;
+
+:host {
+    display: block;
+}
+
+.overlay-card {
+    padding: 8px 16px 8px 16px;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    background: $wimfov-background;
+    color: $wimfov-text;
+}
+
+.overlay-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    .overlay-title {
+        font-weight: 700;
+    }
+
+    .overlay-hint {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+
+}
+
+.overlay-body {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+
+    .panel {
+        // the panels share the width, capped by the window height
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        svg {
+            width: 100%;
+            height: auto;
+            max-height: 78vh;
+        }
+
+        .panel-name {
+            font-size: 12px;
+            font-weight: 600;
+
+            .name-left {
+                color: $wimfov-red;
+            }
+
+            .name-right {
+                color: $wimfov-blue;
+            }
+        }
+    }
+}
+
+.overlay-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+
+    .legend-entry {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 6px;
+        vertical-align: -1px;
+    }
+}
+
+.overlay-note {
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #444444;
+
+    .missing {
+        margin-left: 6px;
+        font-weight: 600;
+    }
+}
+
+// svg styling, coordinates are in the normalized seen space of each eye
+svg {
+    .panel-rect {
+        fill: #ffffff;
+        stroke: #000000;
+        stroke-width: 0.02;
+    }
+
+    .panel-fill {
+        fill: #ffffff;
+        stroke: none;
+    }
+
+    // stroke color comes from the entry, as an attribute, so no stroke here
+    .entry-panel {
+        fill: none;
+        stroke-width: 0.012;
+        stroke-dasharray: 0.06 0.02;
+    }
+
+    .panel-center {
+        fill: none;
+        stroke: #bb00bb;
+        stroke-width: 0.01;
+        stroke-dasharray: 0.05 0.03;
+    }
+
+    .contour {
+        fill: none;
+        stroke-width: 0.008;
+        stroke-opacity: 0.85;
+    }
+
+    .boundary {
+        fill: none;
+        stroke-width: 0.025;
+    }
+
+    .ham {
+        fill: none;
+        stroke-width: 0.015;
+        stroke-dasharray: 0.03 0.03;
+
+        &:not(.entry-ham) {
+            stroke: #666666;
+        }
+
+        // stroke color comes from the entry, as an attribute
+        &.entry-ham {
+            stroke-opacity: 0.8;
+        }
+    }
+
+    .cross,
+    .forward {
+        fill: none;
+        stroke-width: 0.015;
+    }
+
+    .contour-label {
+        fill: #333333;
+        font-size: 0.055px;
+        text-anchor: middle;
+        paint-order: stroke;
+        stroke: #ffffff;
+        stroke-width: 0.012;
+    }
+}

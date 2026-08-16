@@ -235,3 +235,114 @@ export function outlineToSvgPath(outline: Point[]): string {
   const parts = outline.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(2)} ${(-p.y).toFixed(2)}`);
   return parts.join('') + 'Z';
 }
+
+/** the driver's raw projection when valid, otherwise a symmetric one from the fov angles, null without either */
+export function projectionFromResolution(raw: number[] | undefined, fovX: number, fovY: number): EyeProjection | null {
+  if (raw && raw.length === 4 && raw[1] > raw[0] && raw[3] > raw[2]) {
+    return { left: raw[0], right: raw[1], bottom: raw[2], top: raw[3] };
+  }
+  if (fovX > 0 && fovY > 0) {
+    const tanX = Math.tan(fovX / 2 * DEG);
+    const tanY = Math.tan(fovY / 2 * DEG);
+    return { left: -tanX, right: tanX, bottom: -tanY, top: tanY };
+  }
+  return null;
+}
+
+/** what the eye shapes of a headset configuration are computed from: the driver's resolution block and the tab's settings */
+export type EyeShapesInput = {
+  resolution: { projectionLeft?: number[]; projectionRight?: number[]; fovX: number; fovY: number; eyeRotationOffset?: number };
+  config?: { eyeRotation?: number; disableEye?: number; hiddenArea?: HamRadii & { enable: boolean; testMode: boolean } };
+};
+
+/** the shapes of both eyes of a configuration, each null when disabled or without a projection; null when neither has one */
+export function eyeShapesOf(input: EyeShapesInput): { left: EyeShape | null; right: EyeShape | null } | null {
+  const { resolution, config } = input;
+  const projections = {
+    left: projectionFromResolution(resolution.projectionLeft, resolution.fovX, resolution.fovY),
+    right: projectionFromResolution(resolution.projectionRight, resolution.fovX, resolution.fovY),
+  };
+  if (!projections.left && !projections.right) {
+    return null;
+  }
+  const rotation = (config?.eyeRotation ?? 0) + (resolution.eyeRotationOffset ?? 0);
+  const hamConfig = config?.hiddenArea;
+  const ham: HamRadii | null = (hamConfig?.enable && !hamConfig.testMode) ? hamConfig : null;
+  const disableEye = config?.disableEye ?? 0;
+  const left = (disableEye & 1) || !projections.left ? null
+    : computeEyeShape({ projection: projections.left, isRight: false, rotationDeg: rotation, ham });
+  const right = (disableEye & 2) || !projections.right ? null
+    : computeEyeShape({ projection: projections.right, isRight: true, rotationDeg: rotation, ham });
+  if (!left && !right) {
+    return null;
+  }
+  return { left, right };
+}
+
+export type PolarSpoke = { x: number; y: number; side: 'axis' | 'left' | 'right' };
+export type PolarRingLabel = { x: number; y: number; rotation: number; text: string };
+export type PolarBackdrop = {
+  /** backdrop ring radii, only up to the outermost band the shapes reach into */
+  rings: number[];
+  maxRing: number;
+  spokes: PolarSpoke[];
+  /** labels hugging the 30/60 degree rings and the outermost ring, rotated along the circle */
+  ringLabels: PolarRingLabel[];
+  viewSize: number;
+  viewBox: string;
+};
+
+/** the rings, spokes and ring labels behind the shapes, trimmed to the bands the shapes reach into plus one empty band */
+export function polarBackdrop(maxExtent: number, outerLabelMargin: number): PolarBackdrop {
+  const maxRing = Math.min(90, Math.max(15, Math.ceil(maxExtent / 5) * 5 + 5));
+  const rings: number[] = [];
+  for (let ring = 5; ring <= maxRing; ring += 5) {
+    rings.push(ring);
+  }
+  // WimFOV colors the diagonal spokes by the eye that extends towards them
+  const spokes: PolarSpoke[] = Array.from({ length: SPOKE_COUNT }, (_, i) => {
+    const phi = (i / SPOKE_COUNT) * 2 * Math.PI;
+    const angle = i * (360 / SPOKE_COUNT);
+    const side = angle % 90 === 0 ? 'axis' : (angle > 90 && angle < 270 ? 'left' : 'right');
+    return { x: maxRing * Math.cos(phi), y: -maxRing * Math.sin(phi), side };
+  });
+  // labels for the reference rings and the outermost ring, placed just inside their
+  // circle and rotated along it, on diagonals between the spokes to stay readable
+  const ringLabels: PolarRingLabel[] = [];
+  for (const ring of [...[30, 60].filter(r => r < maxRing), maxRing]) {
+    for (const angleDeg of [56.25, 236.25]) {
+      const phi = angleDeg * DEG;
+      const radius = ring - 1;
+      let rotation = 90 - angleDeg;
+      while (rotation <= -90) rotation += 180;
+      while (rotation > 90) rotation -= 180;
+      ringLabels.push({ x: radius * Math.cos(phi), y: -radius * Math.sin(phi), rotation, text: `${ring}°` });
+    }
+  }
+  const viewSize = maxRing + outerLabelMargin + 6;
+  return { rings, maxRing, spokes, ringLabels, viewSize, viewBox: `${-viewSize} ${-viewSize} ${viewSize * 2} ${viewSize * 2}` };
+}
+
+/** the largest extent of the given shapes in degrees, 0 without any */
+export function maxExtentOf(shapes: (EyeShape | null)[]): number {
+  let maxExtent = 0;
+  for (const shape of shapes) {
+    if (shape) {
+      for (const extent of shape.extents) {
+        maxExtent = Math.max(maxExtent, extent);
+      }
+    }
+  }
+  return maxExtent;
+}
+
+/** the outline of the union of the eyes as a star shaped polygon in chart coordinates, from their extents */
+export function unionOutline(left: EyeShape | null, right: EyeShape | null): Point[] {
+  const points: Point[] = [];
+  for (let k = 0; k < EXTENT_SAMPLES; k++) {
+    const phi = (k / EXTENT_SAMPLES) * 2 * Math.PI;
+    const r = Math.max(left ? left.extents[k] : 0, right ? right.extents[k] : 0);
+    points.push({ x: r * Math.cos(phi), y: r * Math.sin(phi) });
+  }
+  return points;
+}

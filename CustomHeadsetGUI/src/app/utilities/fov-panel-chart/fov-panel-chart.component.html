@@ -5,6 +5,9 @@
     <span class="panel-chart-hint" i18n>Where view angles land on the panels</span>
     @if(data(); as source) {
       <app-chart-source-badge [source]="source.source" />
+      @if(showCompare()) {
+        <app-chart-compare-button [headsetType]="headsetType()" [profile]="source.profileId" kind="panel" />
+      }
     }
     <span class="spacer"></span>
     <div class="channel-picker">

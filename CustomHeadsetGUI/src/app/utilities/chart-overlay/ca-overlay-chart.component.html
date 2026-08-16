@@ -1,0 +1,45 @@
+@if(chart(); as vm) {
+<div class="overlay-card">
+  <div class="overlay-header">
+    <span class="overlay-title" i18n>Chromatic Aberration Correction</span>
+    <span class="overlay-hint" i18n>Red and blue offsets from green of each profile, in percent of the panel position</span>
+  </div>
+  <div class="overlay-body">
+    @for(facet of [vm.red, vm.blue]; track $index) {
+      <div class="facet">
+        <div class="facet-title">
+          @if($index === 0) { <span i18n>Red channel</span> }
+          @else { <span i18n>Blue channel</span> }
+        </div>
+        <svg [attr.viewBox]="facet.viewBox" preserveAspectRatio="xMidYMid meet">
+          @for(tick of facet.yTicks; track $index) {
+            <line class="grid" [attr.x1]="plotLeft" [attr.x2]="plotRight" [attr.y1]="tick.y" [attr.y2]="tick.y" />
+            <text class="tick-label y" [attr.x]="plotLeft - 4" [attr.y]="tick.y + 3">{{tick.label}}</text>
+          }
+          @for(tick of facet.xTicks; track $index) {
+            <text class="tick-label x" [attr.x]="tick.x" [attr.y]="plotBottom + 14">{{tick.label}}</text>
+          }
+          <line class="axis" [attr.x1]="plotLeft" [attr.x2]="plotRight" [attr.y1]="facet.zeroY" [attr.y2]="facet.zeroY" />
+          @for(line of facet.lines; track $index) {
+            <path class="curve" [attr.d]="line.path" [attr.stroke]="line.color" />
+          }
+        </svg>
+      </div>
+    }
+  </div>
+  <div class="overlay-legend">
+    @for(entry of vm.drawn; track entry.id) {
+      <span class="legend-entry"><span class="dot" [style.background]="entry.color"></span>{{entry.label}}</span>
+    }
+  </div>
+  @if(vm.missing.length) {
+    <div class="overlay-note">
+      <span i18n>Not drawn, no chromatic aberration curves available:</span>
+      @for(entry of vm.missing; track entry.id) { <span class="missing">{{entry.label}}</span> }
+    </div>
+  }
+  @if(vm.scaled) {
+    <div class="overlay-note" i18n>Curves are drawn with the chromatic aberration correction strength of each headset tab applied.</div>
+  }
+</div>
+}

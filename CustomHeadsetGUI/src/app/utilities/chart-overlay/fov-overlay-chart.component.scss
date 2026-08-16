@@ -1,0 +1,144 @@
+// the same WimFOV inspired look as the FOV preview of a headset tab
+$wimfov-background: #FFFFE0;
+$wimfov-text: #1a1a1a;
+
+:host {
+    display: block;
+}
+
+.overlay-card {
+    padding: 8px 16px 8px 16px;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    background: $wimfov-background;
+    color: $wimfov-text;
+}
+
+.overlay-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    .overlay-title {
+        font-weight: 700;
+    }
+
+    .overlay-hint {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+}
+
+.overlay-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+
+    // the chart takes the room it gets, capped by the window height, the table beside or below it
+    svg {
+        height: auto;
+        aspect-ratio: 1 / 1;
+        flex: 1 1 400px;
+        max-width: min(100%, 78vh);
+    }
+}
+
+.metrics {
+    border-collapse: collapse;
+    font-size: 13px;
+    flex: 0 1 auto;
+
+    th {
+        font-weight: 700;
+        text-align: right;
+        padding: 2px 8px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+    }
+
+    td {
+        text-align: right;
+        padding: 3px 8px;
+        white-space: nowrap;
+    }
+
+    .entry-cell {
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .source-cell {
+        text-align: left;
+    }
+
+    .dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 6px;
+        vertical-align: -1px;
+    }
+}
+
+.overlay-note {
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #444444;
+}
+
+// svg styling, sizes are in chart units (degrees)
+svg {
+    .chart-disc {
+        fill: #ffffff;
+        stroke: none;
+    }
+
+    .ring {
+        fill: none;
+        stroke: #aaaaaa;
+        stroke-width: 0.3;
+
+        &.ring-major {
+            stroke: #777777;
+            stroke-width: 0.45;
+        }
+
+        &.ring-outer {
+            stroke: #000000;
+            stroke-width: 1;
+        }
+    }
+
+    .spoke {
+        stroke: #555555;
+        stroke-opacity: 0.8;
+        stroke-width: 0.3;
+        stroke-dasharray: 1.5 2.5;
+    }
+
+    .ring-label {
+        fill: #404040;
+        font-size: 4px;
+        font-weight: 700;
+        text-anchor: middle;
+        paint-order: stroke;
+        stroke: #ffffff;
+        stroke-width: 0.6;
+    }
+
+    .entry-shape {
+        fill-opacity: 0.08;
+        stroke-width: 1;
+        stroke-linejoin: round;
+    }
+
+    .center-cross {
+        stroke: #333333;
+        stroke-width: 0.4;
+        fill: none;
+    }
+}

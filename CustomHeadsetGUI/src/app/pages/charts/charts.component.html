@@ -1,0 +1,88 @@
+<div class="toolbar">
+  <mat-button-toggle-group class="chart-kind" [value]="svc.chartKind()" (change)="setChartKind($event.value)" hideSingleSelectionIndicator>
+    <mat-button-toggle value="fov"><span i18n>FOV Preview</span></mat-button-toggle>
+    <mat-button-toggle value="panel"><span i18n>Panel Angle Map</span></mat-button-toggle>
+    <mat-button-toggle value="ca"><span i18n>Chromatic Aberration</span></mat-button-toggle>
+  </mat-button-toggle-group>
+  <mat-button-toggle-group class="mode" [value]="effectiveMode()" (change)="setMode($event.value)" hideSingleSelectionIndicator>
+    <mat-button-toggle value="tiles"><span i18n>Side by side</span></mat-button-toggle>
+    <mat-button-toggle value="overlay" [disabled]="!overlayAvailable()"><span i18n>Overlay</span></mat-button-toggle>
+  </mat-button-toggle-group>
+  <span class="spacer"></span>
+  <button mat-stroked-button (click)="showAdd.set(!showAdd())">
+    <mat-icon>add</mat-icon>
+    <span i18n>Add headset and profile to comparison</span>
+  </button>
+  <button mat-button [disabled]="!svc.entries().length" (click)="svc.clear()"><span i18n>Clear</span></button>
+</div>
+
+@if(showAdd()) {
+  <div class="add-form">
+    <div class="add-field headset-field">
+      <span class="add-label" i18n>Choose headset</span>
+      <mat-select [value]="addHeadset()" (selectionChange)="selectAddHeadset($event.value)">
+        @for(h of svc.headsets; track h.headsetType) {
+          <mat-option [value]="h.headsetType">{{h.label}}</mat-option>
+        }
+      </mat-select>
+    </div>
+    <div class="add-field profile-field">
+      <span class="add-label" i18n>Choose distortion profile</span>
+      <mat-select [value]="addProfile()" (selectionChange)="addProfile.set($event.value)">
+        @for(p of addProfiles(); track p.name) {
+          <mat-option [value]="p.name">{{p.displayName}}@if(!p.compatible) { <span class="incompatible" i18n> (made for another headset)</span> }</mat-option>
+        }
+      </mat-select>
+    </div>
+    <button mat-flat-button class="add-button" [disabled]="!addProfile()" (click)="addEntry()"><span i18n>Add</span></button>
+    <span class="add-hint" i18n>Each combination is drawn with the settings of that headset's tab, only the profile is swapped.</span>
+  </div>
+}
+
+@if(svc.entries().length) {
+  <div class="entries">
+    @for(e of svc.entries(); track e.id; let i = $index) {
+      <span class="entry-chip">
+        <span class="dot" [style.background]="svc.colorOf(i)"></span>
+        <span class="entry-label">{{entryLabel(e)}}</span>
+        <button type="button" class="remove" (click)="svc.remove(e.id)" matTooltip="Remove" i18n-matTooltip>
+          <mat-icon>close</mat-icon>
+        </button>
+      </span>
+    }
+  </div>
+} @else {
+  <div class="empty">
+    <p i18n>Nothing to compare yet. Add headsets and profiles here, or press the compare button on a chart of a headset tab or on a profile of the Distortion Profile page.</p>
+  </div>
+}
+
+@if(svc.entries().length && effectiveMode() === 'overlay') {
+  <div class="overlay">
+    @switch(svc.chartKind()) {
+      @case('fov') { <app-fov-overlay-chart [entries]="overlayEntries()" /> }
+      @case('panel') { <app-panel-overlay-chart [entries]="overlayEntries()" /> }
+      @case('ca') { <app-ca-overlay-chart [entries]="overlayEntries()" /> }
+    }
+  </div>
+} @else if(svc.entries().length) {
+  <div class="tiles" [class.wide]="svc.chartKind() === 'panel'">
+    @for(e of svc.entries(); track e.id; let i = $index) {
+      <div class="tile">
+        <div class="tile-title">
+          <span class="dot" [style.background]="svc.colorOf(i)"></span>
+          <span>{{entryLabel(e)}}</span>
+        </div>
+        @if(tileNote(e); as note) {
+          <div class="tile-note">{{note}}</div>
+        } @else {
+          @switch(svc.chartKind()) {
+            @case('fov') { <app-fov-chart [headsetType]="e.headsetType" [profile]="e.profile" [showCompare]="false" /> }
+            @case('panel') { <app-fov-panel-chart [headsetType]="e.headsetType" [profile]="e.profile" [showCompare]="false" /> }
+            @case('ca') { <app-fov-ca-chart [headsetType]="e.headsetType" [profile]="e.profile" [scaleRed]="caScale(e, 'red')" [scaleBlue]="caScale(e, 'blue')" [showCompare]="false" /> }
+          }
+        }
+      </div>
+    }
+  </div>
+}

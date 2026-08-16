@@ -2,6 +2,9 @@
   <div class="ca-chart-header">
     <span class="ca-chart-title" i18n>Chromatic Aberration Correction</span>
     <span class="ca-chart-hint" i18n>Red and blue offsets of the selected profile</span>
+    @if(showCompare() && profileId()) {
+      <app-chart-compare-button [headsetType]="headsetType()" [profile]="profileId()" kind="ca" />
+    }
   </div>
   @if(chart(); as vm) {
     <div class="ca-chart-body">
