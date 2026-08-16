@@ -1,4 +1,4 @@
-import { Component, computed, effect, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,6 +16,7 @@ import { ColorPickerComponent } from '../../../utilities/color-picker/color-pick
 import { FovChartComponent } from '../../../utilities/fov-chart/fov-chart.component';
 import { FovPanelChartComponent } from '../../../utilities/fov-panel-chart/fov-panel-chart.component';
 import { FovCaChartComponent } from '../../../utilities/fov-ca-chart/fov-ca-chart.component';
+import { FovChartSourceService } from '../../../utilities/distortion/fov-chart-source.service';
 import { EyePositionChartComponent } from '../../../utilities/eye-position-chart/eye-position-chart.component';
 import { DeviceConfigComponentBase } from '../DeviceConfigComponentBase';
 import { BaseHeadsetConfig, HeadsetType } from '../../../services/JsonFileDefines';
@@ -268,9 +269,11 @@ export class HeadsetSettingsComponent extends DeviceConfigComponentBase<BaseHead
     }
   }
 
-  // Computed keys to force slider re-render when max changes
-  sliderMaxFovX = computed(() => Math.ceil(this.headsetMatches() ? this.dis.values()?.resolution?.fovMaxX || this.config().defaultMaxFovX : this.config().defaultMaxFovX));
-  sliderMaxFovY = computed(() => Math.ceil(this.headsetMatches() ? this.dis.values()?.resolution?.fovMaxY || this.config().defaultMaxFovY : this.config().defaultMaxFovY));
+  private chartSource = inject(FovChartSourceService);
+  // Computed keys to force slider re-render when max changes: the widest fov the selected profile can show on
+  // this headset, from the driver while it runs the headset or evaluated from the tab's settings, else the default
+  sliderMaxFovX = computed(() => Math.ceil(this.chartSource.data(this.headsetType())?.resolution.fovMaxX || this.config().defaultMaxFovX));
+  sliderMaxFovY = computed(() => Math.ceil(this.chartSource.data(this.headsetType())?.resolution.fovMaxY || this.config().defaultMaxFovY));
 
   trackBySliderMax(index: number, value: number): number {
     return value;
