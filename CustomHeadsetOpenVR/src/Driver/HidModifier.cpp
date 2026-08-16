@@ -3,6 +3,7 @@
 #include "../Config/ConfigLoader.h"
 #include "../Helpers/PimaxCommon.h"
 #include "../Helpers/MiscHelper.h"
+#include "../Helpers/LighthouseGeometry.h"
 
 #ifdef __linux__
 #include <unistd.h>
@@ -312,7 +313,10 @@ std::string HidModifier::ReadLighthouseConfig(HidDeviceInfo &info){
 	bool doReplace = false;
 	
 	ordered_json data = ordered_json::parse(configStr, nullptr, false, true);
-	
+
+	// keep the head frame as it came from the device so the geometry export can show what an override changed
+	ordered_json originalHead = (data.is_object() && data.contains("head")) ? data["head"] : ordered_json(nullptr);
+
 	// Apply user-defined lighthouse overrides before reading any fields
 	for (auto& override : driverConfig.lighthouseOverrides) {
 		if (!override.enable) continue;
@@ -401,8 +405,25 @@ std::string HidModifier::ReadLighthouseConfig(HidDeviceInfo &info){
 		mergeJson(data, jsonOverrides[info.lighthouseDeviceName]);
 		doReplace = true;
 	}
-	
-	
+
+	bool exportGeometry = info.lighthouseDeviceClass == "hmd";
+	#ifdef HAS_PRIVATE
+	// leave the export to the driver that handles the headset when this one only does the private parts
+	exportGeometry = exportGeometry && !driverConfig.onlyHandlePrivateFunctionality;
+	#endif
+	if(exportGeometry){
+		// export the sensor, imu and head geometry of the headset for the eye position visualization in the GUI.
+		// this is the config as the lighthouse driver gets it, so it includes any user overrides of the head frame
+		Config::HeadsetType geometryHeadsetType = Config::HeadsetType::None;
+		if(info.lighthouseDeviceName == "MeganeX superlight 8K" || info.lighthouseDeviceName == "MeganeX 8K Mark II"){
+			geometryHeadsetType = Config::HeadsetType::MeganeX8K;
+		}else if(PimaxCommon::IsPimaxLighthouseDevice(info.lighthouseDeviceName, info.lighthouseDeviceManufacturer) && PimaxCommon::IsLighthouseHeadsetConnected()){
+			geometryHeadsetType = PimaxCommon::GetInfo().headsetType;
+		}
+		LighthouseGeometry::Write(data, originalHead.is_null() ? nullptr : &originalHead, geometryHeadsetType, driverConfigLoader.GetConfigFolder());
+	}
+
+
 	if(info.lighthouseDeviceClass == "hmd"){
 		if(driverConfig.meganeX8K.enable && driverConfig.meganeX8K.forceEnable){
 			int vendorId = driverConfig.meganeX8K.edidVendorIdOverride ? driverConfig.meganeX8K.edidVendorIdOverride : driverConfig.meganeX8K.edidVendorId;
