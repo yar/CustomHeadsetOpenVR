@@ -186,12 +186,12 @@ void PimaxDistortionProfile::GetProjectionRaw(vr::EVREye eEye, float* pfLeft, fl
 Point2D PimaxDistortionProfile::ComputeDistortion(vr::EVREye eEye, ColorChannel colorChannel, float fU, float fV) {
     pvrVector2f outUV[3];
 
-    Config::BaseHeadsetConfig& headsetConfig = PimaxCommon::GetHeadsetConfigDefault();
-    // Counteract the display rotation and scaling applied in BaseHeadset::transformUV.
-    // Inverse operations applied in reverse order of the forward transform.
+    // Counteract the display rotation and scaling applied in BaseHeadset::transformUV, so PVR gets the panel's
+    // own scanout coordinates. The rotation is the one in effect, the same transformUV applies, so the two cancel
+    // whatever it is set to. Inverse operations applied in reverse order of the forward transform.
     // Un-scale non-square resolution
     const float minResolution = (float)std::min(resolutionX, resolutionY);
-    float displayRotation = (float)headsetConfig.displayRotation;
+    int displayRotation = PimaxCommon::GetHeadsetConfig().displayRotation;
     fU *= minResolution / resolutionX;
     fV *= minResolution / resolutionY;
     // Counteract negation for 180 and 270 rotation
