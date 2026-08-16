@@ -27,4 +27,7 @@ private:
 
 	std::thread pvrTrackingThread;
 	std::atomic<bool> pvrTrackingRunning;
+	// time of the last recenter request from commands.json that the tracking thread has seen, so a request is only
+	// acted on once even when the thread is restarted after the headset reconnects
+	uint64_t handledRecenterTime = 0;
 };

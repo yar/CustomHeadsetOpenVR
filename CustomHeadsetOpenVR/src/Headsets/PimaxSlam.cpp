@@ -8,6 +8,8 @@
 #include "../Helpers/MiscHelper.h"
 #include "../Helpers/vr_blockqueue.h"
 
+#include <chrono>
+#include <cmath>
 #include <DirectXMath.h>
 #include <filesystem>
 #include <memory>
@@ -17,6 +19,58 @@
 
 // Matches driver_aapvr.
 static constexpr uint64_t k_UniverseId = 30;
+
+// The tracking space handed to SteamVR is the PVR space moved by this rigid transform, world = rotation * pvr + translation,
+// through the world from driver part of every pose of the headset and the controllers. It is only ever a rotation about
+// the vertical axis so the floor stays level. It starts as the identity and is set by recenter requests from the GUI,
+// see RecenterPlayspace() and PvrTrackingThread(). It lives for the session only, the PVR space is different on every start.
+//
+// SteamVR shows the standing universe, which is this raw space moved once more by the room setup of the universe:
+// standing = R(yaw) * raw + translation, with the standing entry of chaperone_info.vrchap giving the raw origin as seen
+// from the standing space. A stale room setup (the PVR space is different on every start) puts the raw origin anywhere,
+// so recentering goes in two steps: the headset is held at the raw origin while the GUI has SteamVR reset its standing
+// origin to the headset (vrcmd --resetroomheight, which also resets the seated origin), which makes the room setup the
+// identity but for the height it keeps between the headset and the floor. The GUI then reads that entry back and finishes
+// the request, and the headset is lifted to eye height inside the standing space.
+struct PlayspaceTransform {
+	vr::HmdQuaternion_t rotation = { 1, 0, 0, 0 };
+	double translation[3] = { 0, 0, 0 };
+
+	void ApplyTo(vr::DriverPose_t& pose) const {
+		pose.qWorldFromDriverRotation = rotation;
+		pose.vecWorldFromDriverTranslation[0] = translation[0];
+		pose.vecWorldFromDriverTranslation[1] = translation[1];
+		pose.vecWorldFromDriverTranslation[2] = translation[2];
+	}
+};
+
+// Computes the transform that puts the given head pose at the origin of the tracking space, facing forward. Only the yaw
+// of the head counts, so looking up or down while recentering does not tilt the world. Lifting the head from there is a
+// matter of adding to the translation, see PvrTrackingThread().
+static PlayspaceTransform RecenterPlayspace(const pvrPosef& head) {
+	const auto& q = head.Orientation;
+	// yaw of the head, positive when turned to the left, from the horizontal projection of its forward (-Z) direction
+	const double yaw = std::atan2(2.0 * (q.x * q.z + q.w * q.y), 1.0 - 2.0 * (q.x * q.x + q.y * q.y));
+	// turn the space back by that yaw about the vertical axis
+	const double angle = -yaw;
+	PlayspaceTransform transform;
+	transform.rotation = { std::cos(angle / 2), 0, std::sin(angle / 2), 0 };
+	// where the head lands after the turn, the translation then moves it onto the origin
+	const double turnedX = std::cos(angle) * head.Position.x + std::sin(angle) * head.Position.z;
+	const double turnedZ = -std::sin(angle) * head.Position.x + std::cos(angle) * head.Position.z;
+	transform.translation[0] = -turnedX;
+	transform.translation[1] = -head.Position.y;
+	transform.translation[2] = -turnedZ;
+	return transform;
+}
+
+// A request from the GUI is only followed when it was made moments ago, so a commands.json left over from an earlier
+// session does not recenter on the next start, nor does a request made while nothing was running to act on it.
+static bool IsRecentRequest(uint64_t requestTimeMs) {
+	const int64_t nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	const int64_t ageMs = nowMs - (int64_t)requestTimeMs;
+	return ageMs > -5000 && ageMs < 30000;
+}
 
 // A driver for Pimax Crystal controllers.
 class PimaxCrystalControllerDriver : public vr::ITrackedDeviceServerDriver {
@@ -261,11 +315,13 @@ public:
 		}
 	}
 
-	void UpdateTrackingState(const pvrPoseStatef& poseState) {
+	// playspace is the transform of the tracking space shared with the headset so the hands stay where they are seen
+	void UpdateTrackingState(const pvrPoseStatef& poseState, const PlayspaceTransform& playspace) {
 		const auto pvrNow = PimaxCommon::GetPvrTime();
 
 		vr::DriverPose_t pose = {};
 		pose.qWorldFromDriverRotation.w = pose.qDriverFromHeadRotation.w = pose.qRotation.w = 1.0;
+		playspace.ApplyTo(pose);
 		if (deviceIndex != vr::k_unTrackedDeviceIndexInvalid) {
 			isConnected = isConnected || (poseState.StatusFlags & pvrStatus_OrientationTracked);
 			pose.deviceIsConnected = isConnected;
@@ -409,6 +465,11 @@ void PimaxSlamDriver::PosTrackedDeviceActivate(uint32_t& unObjectId, vr::EVRInit
 		s_cameraDriver->Activate(unObjectId);
 	}
 
+	// lets the GUI know that recenter requests have somewhere to go, and whose room setup they concern
+	driverConfigLoader.info.pimaxSlamActive = true;
+	driverConfigLoader.info.recenterUniverseId = k_UniverseId;
+	driverConfigLoader.info.needToWrite = true;
+
 	returnValue = vr::VRInitError_None;
 	BaseHeadsetShim::PosTrackedDeviceActivate(unObjectId, returnValue);
 }
@@ -417,6 +478,8 @@ void PimaxSlamDriver::SubDeactivate() {
 	StopPvrTracking();
 	StopEyeTracking();
 	pimaxHandTracking.Stop();
+	driverConfigLoader.info.pimaxSlamActive = false;
+	driverConfigLoader.info.needToWrite = true;
 }
 
 void PimaxSlamDriver::RunFrame() {
@@ -590,6 +653,28 @@ void PimaxSlamDriver::PvrTrackingThread() {
 	
 	bool hasRecentered = false;
 	double trackingSinceTime = 0;
+	// the space handed to SteamVR is moved by recenter requests from the GUI within this session, see PlayspaceTransform
+	PlayspaceTransform playspace = {};
+	// where a recenter request stands: waiting for the headset to be tracked, holding it at the origin until the
+	// request is finished, or finished with the head lifted to eye height, which then follows the eye height setting
+	enum class RecenterStage { None, WaitingForTracking, Zeroed, Lifted };
+	RecenterStage recenterStage = RecenterStage::None;
+	// pvr time the current stage was entered, for giving up on it
+	double recenterStageSince = 0;
+	// the transform that holds the head at the origin, the lift is added on top of it
+	PlayspaceTransform zeroPlayspace = {};
+	// the raw origin as seen from the SteamVR standing space after the room setup was reset, from the finish request
+	double standingOffset[3] = { 0, 0, 0 };
+	// commands.json version last looked at, one behind so a request made just before the thread started is seen
+	uint32_t handledCommandsVersion = driverCommands.version - 1;
+
+	// lifts the head from the origin to eye height inside the standing space, the eye height setting is followed live
+	const auto liftPlayspace = [&]() {
+		playspace = zeroPlayspace;
+		playspace.translation[0] -= standingOffset[0];
+		playspace.translation[1] += GetHeadsetConfig().recenterEyeHeight - standingOffset[1];
+		playspace.translation[2] -= standingOffset[2];
+	};
 
 	while (true) {
 		WaitForSingleObject(timer, 100);
@@ -618,12 +703,74 @@ void PimaxSlamDriver::PvrTrackingThread() {
 			pvr_recenterTrackingOrigin(GetPvrSession());
 			DriverLog("Recentered PVR tracking");
 			hasRecentered = true;
+			// the PVR space moved, a transform computed in the old space no longer fits
+			playspace = {};
+			recenterStage = RecenterStage::None;
+		}
+
+		// Recenter the tracking space on the headset when the GUI asks for it through commands.json, see the notes at
+		// PlayspaceTransform. The player has just put the headset on and faces forward, so the headset becomes the center
+		// of the space, its facing direction forward, and the floor is placed the configured eye height below it. This does
+		// not touch the PVR origin, everything happens in the world from driver transform of the poses.
+		if(const uint32_t commandsVersion = driverCommands.version; commandsVersion != handledCommandsVersion){
+			handledCommandsVersion = commandsVersion;
+			const DriverCommands::Recenter request = driverCommands.GetRecenter();
+			if(!request.finish){
+				if(request.time != handledRecenterTime){
+					handledRecenterTime = request.time;
+					if(IsRecentRequest(request.time)){
+						recenterStage = RecenterStage::WaitingForTracking;
+						recenterStageSince = pvrNow;
+						driverConfigLoader.SetRecenterState(request.time, "waiting");
+					}
+				}
+			}else if(request.time == handledRecenterTime && recenterStage == RecenterStage::Zeroed){
+				// the GUI has reset the SteamVR origin to the zeroed headset, so lift it inside the standing space it left
+				for(int i = 0; i < 3; i++){
+					standingOffset[i] = request.hasStanding ? request.standingTranslation[i] : 0;
+				}
+				liftPlayspace();
+				recenterStage = RecenterStage::Lifted;
+				DriverLog("Recentered the tracking space on the headset, standing origin offset %.2f %.2f %.2f yaw %.3f%s",
+					standingOffset[0], standingOffset[1], standingOffset[2], request.standingYaw, request.hasStanding ? "" : " (not reset)");
+				driverConfigLoader.SetRecenterState(request.time, "done");
+			}
+		}
+		if(recenterStage == RecenterStage::WaitingForTracking){
+			// wait for the automatic recenter above to have moved the PVR space, and for the head to be tracked in it
+			const bool autoRecenterDone = hasRecentered || !GetHeadsetConfig().recenterPimaxPlayspace;
+			const unsigned int tracked6Dof = pvrStatus_OrientationTracked | pvrStatus_PositionTracked;
+			if(autoRecenterDone && (trackingState.HeadPose.StatusFlags & tracked6Dof) == tracked6Dof){
+				zeroPlayspace = RecenterPlayspace(trackingState.HeadPose.ThePose);
+				playspace = zeroPlayspace;
+				recenterStage = RecenterStage::Zeroed;
+				recenterStageSince = pvrNow;
+				DriverLog("Holding the headset at the origin for recentering, it was %.2f m above the PVR origin", trackingState.HeadPose.ThePose.Position.y);
+				driverConfigLoader.SetRecenterState(handledRecenterTime, "zeroed");
+			}else if(pvrNow - recenterStageSince > 10){
+				recenterStage = RecenterStage::None;
+				DriverLog("Did not recenter the tracking space, the headset was not tracked");
+				driverConfigLoader.SetRecenterState(handledRecenterTime, "noTracking");
+			}
+		}else if(recenterStage == RecenterStage::Zeroed && pvrNow - recenterStageSince > 15){
+			// nothing finished the request, lift the head anyway rather than leaving it on the floor
+			for(double& offset : standingOffset){
+				offset = 0;
+			}
+			liftPlayspace();
+			recenterStage = RecenterStage::Lifted;
+			DriverLog("Recentered the tracking space on the headset without the SteamVR origin being reset");
+			driverConfigLoader.SetRecenterState(handledRecenterTime, "done");
+		}else if(recenterStage == RecenterStage::Lifted){
+			// the floor follows the eye height setting so it can be tuned while wearing the headset
+			liftPlayspace();
 		}
 
 		// Update the headset pose.
 		{
 			vr::DriverPose_t pose = {};
 			pose.qWorldFromDriverRotation.w = pose.qDriverFromHeadRotation.w = pose.qRotation.w = 1.0;
+			playspace.ApplyTo(pose);
 			pose.deviceIsConnected = true;
 			pose.result = vr::TrackingResult_Running_OutOfRange;
 			if (trackingState.HeadPose.StatusFlags & pvrStatus_OrientationTracked) {
@@ -656,7 +803,7 @@ void PimaxSlamDriver::PvrTrackingThread() {
 
 			for (uint32_t side = 0; side < 2; side++) {
 				if (s_controllerDriver[side]) {
-					s_controllerDriver[side]->UpdateTrackingState(trackingState.HandPoses[side]);
+					s_controllerDriver[side]->UpdateTrackingState(trackingState.HandPoses[side], playspace);
 				}
 			}
 		}

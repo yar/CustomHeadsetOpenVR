@@ -3,6 +3,48 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <atomic>
+#include <cstdint>
+
+
+// One shot requests from utilities like the GUI, read from commands.json in the config folder.
+// Every request carries the unix time in milliseconds it was made at, which is also its identity: a request is only
+// acted on when that time changes, and requests older than a few seconds are ignored so a leftover file does not
+// fire again on the next start. The outcome is reported back through info.json.
+class DriverCommands{
+public:
+	// {"recenter": {"time": ..., "phase": "zero" | "finish", "standing": {"translation": [x, y, z], "yaw": r}}}
+	// asks to recenter the tracking space on the headset in two steps, see PimaxSlamDriver::PvrTrackingThread():
+	// the request holds the headset at the origin of the raw space, "finish" for the same time then lifts it to eye
+	// height, with the SteamVR standing origin as it ended up in the raw space so it can be folded in
+	class Recenter{
+	public:
+		uint64_t time = 0;
+		bool finish = false;
+		bool hasStanding = false;
+		double standingTranslation[3] = {0, 0, 0};
+		double standingYaw = 0;
+	};
+	// increases with every change of the request, so readers only take the lock when there is something new
+	std::atomic<uint32_t> version{0};
+	Recenter GetRecenter(){
+		std::lock_guard<std::mutex> guard(lock);
+		return recenter;
+	}
+	void SetRecenter(const Recenter& newRecenter){
+		{
+			std::lock_guard<std::mutex> guard(lock);
+			recenter = newRecenter;
+		}
+		version++;
+	}
+private:
+	std::mutex lock;
+	Recenter recenter;
+};
+
+// global commands object, updated by the config loader when commands.json changes
+extern DriverCommands driverCommands;
 
 
 // This class loads config files and watches for changes to them, updating the global config object as needed.
@@ -47,6 +89,15 @@ public:
 		bool nonNativeHeadsetFound = false;
 		// if the SteamVR dashboard is currently open
 		bool isDashboardOpen = false;
+		// if the Pimax SLAM headset implementation is running the active headset, it is what acts on recenter requests
+		bool pimaxSlamActive = false;
+		// progress of the last recenter request from commands.json: the request time it answers and
+		// "idle" (no request this session), "waiting" (for tracking), "zeroed" (holding the headset at the origin
+		// until the request is finished), "done" or "noTracking" (gave up)
+		uint64_t recenterRequestTime = 0;
+		std::string recenterState = "idle";
+		// the SteamVR tracking universe of the headset that recenters, whose room setup the GUI resets while zeroed
+		uint64_t recenterUniverseId = 0;
 		// used when watching info
 		bool hasBeenUpdated = true;
 		// notifies thread that it should be written (uses diagnostic thread)
@@ -83,8 +134,12 @@ public:
 	void WriteInfo();
 	// remember the eye to head transforms handed to SteamVR and queue an info write
 	void SetEyeToHead(const float left[3][4], const float right[3][4]);
+	// record the outcome of a recenter request and queue an info write
+	void SetRecenterState(uint64_t requestTime, const std::string& state);
 	// read the info.json file from disk
 	void ReadInfo();
+	// read commands.json from disk into the global commands object
+	void ParseCommands();
 	// write the diagnostic.json file to disk (high frequency, 4 times per second)
 	void WriteDiagnosticInfo();
 	// start the config parser
