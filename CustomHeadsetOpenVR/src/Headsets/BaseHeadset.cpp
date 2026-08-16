@@ -377,6 +377,8 @@ void BaseHeadsetShim::SetIPD(float ipd, float angle, float horizontalOffset, flo
 		{s, 0,  c, depthOffset},
 	}};
 	vr::VRServerDriverHost()->SetDisplayEyeToHead(0, leftEye, rightEye);
+	// record what SteamVR was told for the eye position visualization in the GUI
+	driverConfigLoader.SetEyeToHead(leftEye.m, rightEye.m);
 }
 
 
