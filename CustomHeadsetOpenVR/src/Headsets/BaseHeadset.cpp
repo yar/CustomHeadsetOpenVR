@@ -359,8 +359,9 @@ bool BaseHeadsetShim::PreDisplayComponentGetRecommendedRenderTargetSize(uint32_t
 	return false;
 }
 
-// set ipd and adjust eye to head transform accordingly. ipd is in meters. angle it in radians
-void BaseHeadsetShim::SetIPD(float ipd, float angle, float horizontalOffset){
+// set ipd and adjust eye to head transform accordingly. ipd, horizontalOffset and depthOffset are in meters, angle is in radians.
+// depthOffset moves the viewpoint towards the back of the head (+Z of the head frame)
+void BaseHeadsetShim::SetIPD(float ipd, float angle, float horizontalOffset, float depthOffset){
 	vr::PropertyContainerHandle_t container = vr::VRProperties()->TrackedDeviceToPropertyContainer(0);
 	vr::VRProperties()->SetFloatProperty(container, vr::Prop_UserIpdMeters_Float, ipd);
 	float c = std::cos(angle);
@@ -368,12 +369,12 @@ void BaseHeadsetShim::SetIPD(float ipd, float angle, float horizontalOffset){
 	vr::HmdMatrix34_t leftEye = {{
 		{ c, 0, s, -ipd / 2.0f + horizontalOffset},
 		{ 0, 1, 0, 0},
-		{-s, 0, c, 0},
+		{-s, 0, c, depthOffset},
 	}};
 	vr::HmdMatrix34_t rightEye = {{
 		{c, 0, -s, ipd / 2.0f + horizontalOffset},
 		{0, 1,  0, 0},
-		{s, 0,  c, 0},
+		{s, 0,  c, depthOffset},
 	}};
 	vr::VRServerDriverHost()->SetDisplayEyeToHead(0, leftEye, rightEye);
 }
@@ -694,7 +695,7 @@ void BaseHeadsetShim::UpdateSettings(){
 	}
 	
 	
-	SetIPD((float)(GetConfig().ipd + GetConfig().ipdOffset) / 1000.f, (float)((GetConfig().eyeRotation + distortionProfileConstructor.profile->eyeRotationOffset) * kPi / 180.0f), (float)GetConfig().horizontalIPDOffset / 1000.f);
+	SetIPD((float)(GetConfig().ipd + GetConfig().ipdOffset) / 1000.f, (float)((GetConfig().eyeRotation + distortionProfileConstructor.profile->eyeRotationOffset) * kPi / 180.0f), (float)GetConfig().horizontalIPDOffset / 1000.f, (float)GetConfig().viewpointDepthCorrection / 1000.f);
 }
 
 

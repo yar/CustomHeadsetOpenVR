@@ -179,6 +179,10 @@ public:
 		bool hardwareIpd = false;
 		// horizontal offset in mm to shift both eyes to the right
 		double horizontalIPDOffset = 0.0;
+		// mm to move the viewpoint (both eyes) towards the back of the head, negative moves it forward.
+		// this should not be necessary, but corrects a tracked pose origin that does not sit between the pupils,
+		// which makes the world shift when turning the head as if the pivot point was wrong
+		double viewpointDepthCorrection = 0.0;
 		// minimum black levels from 0 to 1
 		double blackLevel = 0;
 		// tint the display this color
