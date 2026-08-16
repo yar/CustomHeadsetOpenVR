@@ -82,11 +82,15 @@ export abstract class DeviceConfigComponentBase<T extends { enable: boolean }> i
     pullingRef = DeviceConfigComponentBase.steamVRStatePulling.createRef(value => {
         this.steamVRRunning.set({ updated: true, running: value })
     })
+    /** the shared SteamVR state pulling needs the diagnostic file path once, from whoever starts it first */
+    static ensureDiagnosticPath(path: string) {
+        if (!DeviceConfigComponentBase._diagnosticPath) {
+            DeviceConfigComponentBase._diagnosticPath = path;
+        }
+    }
     @HostBinding('class.page-disabled') get pageDisabled() { return this.settingField() && !this.settings?.enable }
     constructor() {
-        if (!DeviceConfigComponentBase._diagnosticPath) {
-            DeviceConfigComponentBase._diagnosticPath = this.ps.diagnosticPath;
-        }
+        DeviceConfigComponentBase.ensureDiagnosticPath(this.ps.diagnosticPath);
         effect(() => {
             this.rootSetting = this.dss.values()
             const field = this.settingField();

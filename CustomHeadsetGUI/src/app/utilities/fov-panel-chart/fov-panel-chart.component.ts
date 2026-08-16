@@ -1,11 +1,9 @@
-import { Component, computed, inject, input, OnDestroy, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DriverInfoService } from '../../services/driver-info.service';
-import { DriverSettingService } from '../../services/driver-setting.service';
-import { BaseHeadsetConfig, HeadsetType } from '../../services/JsonFileDefines';
-import { DeviceConfigComponentBase, DistortionProfileDisplayNames } from '../../pages/devices/DeviceConfigComponentBase';
-import { settingsFieldByHeadsetType } from '../fov-chart/headset-fields';
-import { FovVisualizationService, FovVisualizationChannels } from './fov-visualization.service';
+import { HeadsetType } from '../../services/JsonFileDefines';
+import { ChartSourceBadgeComponent } from '../distortion/chart-source-badge.component';
+import { FovChartSourceService } from '../distortion/fov-chart-source.service';
+import { FovVisualizationChannels } from './fov-visualization.service';
 import {
   computeAngleField, computeCoverageField, computeHamField, contourSegments,
   EyeProjection, findCenter, HamRadii, PanelGrid, parseGrid, Point, sampleField, segmentsToSvgPath, SeenSpaceMapping
@@ -41,58 +39,26 @@ const CONTOUR_STEP = 5;
 
 @Component({
   selector: 'app-fov-panel-chart',
-  imports: [CommonModule, PanelChartLegendComponent],
+  imports: [CommonModule, ChartSourceBadgeComponent, PanelChartLegendComponent],
   templateUrl: './fov-panel-chart.component.html',
   styleUrl: './fov-panel-chart.component.scss',
   // without a sampling there is nothing to show, take the flex slot of the row out as well
   host: { '[class.unavailable]': '!chart()' }
 })
-export class FovPanelChartComponent implements OnDestroy {
+export class FovPanelChartComponent {
   /** the headset type of the settings page hosting this chart */
   headsetType = input.required<HeadsetType>();
 
-  private dis = inject(DriverInfoService);
-  private dss = inject(DriverSettingService);
-  private fvs = inject(FovVisualizationService);
+  private source = inject(FovChartSourceService);
 
   channel = signal<PanelChannelChoice>('green');
   channelChoices: PanelChannelChoice[] = ['green', 'red', 'blue', 'all'];
 
-  steamVRRunning = signal({ updated: false, running: false }, { equal: (a, b) => a.running === b.running && a.updated === b.updated });
-  private pullingRef = DeviceConfigComponentBase.steamVRStatePulling.createRef(value => {
-    this.steamVRRunning.set({ updated: true, running: value });
-  });
+  /** the sampling and projections to draw, live from the driver or evaluated from the tab's settings */
+  data = computed(() => this.source.data(this.headsetType()));
 
-  constructor() {
-    this.pullingRef.start();
-  }
-
-  ngOnDestroy(): void {
-    this.pullingRef.stop();
-  }
-
-  /** the sampling belongs to the connected headset, only show it on that headset's page */
-  applicable = computed(() => {
-    const connected = this.dis.values()?.connectedHeadset ?? HeadsetType.None;
-    if (connected === HeadsetType.None || connected !== this.headsetType()) {
-      return false;
-    }
-    // when the sampling records its headset type, also require it to match
-    const dataHeadsetType = this.fvs.values()?.headsetType;
-    return dataHeadsetType === undefined || dataHeadsetType === this.headsetType();
-  });
-
-  /** the data is not being updated when the headset is not actively running */
-  notLive = computed(() => {
-    const state = this.steamVRRunning();
-    return state.updated && !state.running;
-  });
-
-  /** the distortion profile the shown sampling was made with, when recorded */
-  sampledFromProfile = computed(() => {
-    const name = this.fvs.values()?.distortionProfile;
-    return name ? (DistortionProfileDisplayNames.get(name) ?? name) : '';
-  });
+  /** the distortion profile the shown sampling belongs to */
+  profileName = computed(() => this.data()?.profileName ?? '');
 
   /** whether a hidden area cut is drawn, so the legend explains it */
   hasHiddenArea = computed(() => {
@@ -101,26 +67,21 @@ export class FovPanelChartComponent implements OnDestroy {
   });
 
   chart = computed<PanelChartViewModel | undefined>(() => {
-    if (!this.applicable()) {
+    const source = this.data();
+    const data = source?.sampling;
+    if (!source || !data || !data.gridSize) {
       return undefined;
     }
-    const data = this.fvs.values();
-    const info = this.dis.values();
-    const settings = this.dss.values();
-    if (!data || !data.gridSize || !info?.resolution) {
-      return undefined;
-    }
-    const field = settingsFieldByHeadsetType[this.headsetType()];
-    const config = field ? settings?.[field] as BaseHeadsetConfig : undefined;
+    const { resolution, config } = source;
     const hamConfig = config?.hiddenArea;
     const ham: HamRadii | null = (hamConfig?.enable && !hamConfig.testMode) ? hamConfig : null;
     const disableEye = config?.disableEye ?? 0;
     const channel = this.channel();
     // the outward rotation of the eyes, the same the FOV preview turns them by
-    const yaw = (config?.eyeRotation ?? 0) + (info.resolution.eyeRotationOffset ?? 0);
+    const yaw = (config?.eyeRotation ?? 0) + (resolution.eyeRotationOffset ?? 0);
 
-    const left = this.buildEye(data.left, false, data, this.pickProjection(info.resolution.projectionLeft, info.resolution.fovX, info.resolution.fovY), ham, (disableEye & 1) !== 0, channel, yaw);
-    const right = this.buildEye(data.right, true, data, this.pickProjection(info.resolution.projectionRight, info.resolution.fovX, info.resolution.fovY), ham, (disableEye & 2) !== 0, channel, yaw);
+    const left = this.buildEye(data.left, false, data, this.pickProjection(resolution.projectionLeft, resolution.fovX, resolution.fovY), ham, (disableEye & 1) !== 0, channel, yaw);
+    const right = this.buildEye(data.right, true, data, this.pickProjection(resolution.projectionRight, resolution.fovX, resolution.fovY), ham, (disableEye & 2) !== 0, channel, yaw);
     if (!left && !right) {
       return undefined;
     }

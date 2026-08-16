@@ -1,10 +1,8 @@
-import { Component, computed, inject, input, OnDestroy, signal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DriverInfoService } from '../../services/driver-info.service';
-import { DriverSettingService } from '../../services/driver-setting.service';
-import { BaseHeadsetConfig, HeadsetType } from '../../services/JsonFileDefines';
-import { DeviceConfigComponentBase, DistortionProfileDisplayNames } from '../../pages/devices/DeviceConfigComponentBase';
-import { settingsFieldByHeadsetType } from './headset-fields';
+import { HeadsetType } from '../../services/JsonFileDefines';
+import { ChartSourceBadgeComponent } from '../distortion/chart-source-badge.component';
+import { FovChartSourceService } from '../distortion/fov-chart-source.service';
 import {
   computeEyeShape, computeMetrics, outlineToSvgPath,
   EyeProjection, EyeShape, HamRadii, SPOKE_COUNT
@@ -38,58 +36,27 @@ const OUTER_LABEL_MARGIN = 7;
 
 @Component({
   selector: 'app-fov-chart',
-  imports: [CommonModule],
+  imports: [CommonModule, ChartSourceBadgeComponent],
   templateUrl: './fov-chart.component.html',
   styleUrl: './fov-chart.component.scss',
   // without FOV data there is nothing to show, take the flex slot of the row out as well
   host: { '[class.unavailable]': '!chart()' }
 })
-export class FovChartComponent implements OnDestroy {
+export class FovChartComponent {
   /** the headset type of the settings page hosting this chart */
   headsetType = input.required<HeadsetType>();
 
-  private dis = inject(DriverInfoService);
-  private dss = inject(DriverSettingService);
+  private source = inject(FovChartSourceService);
 
-  steamVRRunning = signal({ updated: false, running: false }, { equal: (a, b) => a.running === b.running && a.updated === b.updated });
-  private pullingRef = DeviceConfigComponentBase.steamVRStatePulling.createRef(value => {
-    this.steamVRRunning.set({ updated: true, running: value });
-  });
-
-  constructor() {
-    this.pullingRef.start();
-  }
-
-  ngOnDestroy(): void {
-    this.pullingRef.stop();
-  }
-
-  /** the driver data belongs to the connected headset, only show it on that headset's page */
-  applicable = computed(() => {
-    const connected = this.dis.values()?.connectedHeadset ?? HeadsetType.None;
-    return connected !== HeadsetType.None && connected === this.headsetType();
-  });
-
-  /** the data is not being updated when the headset is not actively running */
-  notLive = computed(() => {
-    const state = this.steamVRRunning();
-    return state.updated && !state.running;
-  });
+  /** the projections and settings to draw, live from the driver or evaluated from the tab's settings */
+  data = computed(() => this.source.data(this.headsetType()));
 
   chart = computed<ChartViewModel | undefined>(() => {
-    if (!this.applicable()) {
+    const data = this.data();
+    if (!data) {
       return undefined;
     }
-    const info = this.dis.values();
-    // resolve the config inline from the root settings signal, the nested config objects
-    // are mutated in place by the settings pages so their references never change
-    const settings = this.dss.values();
-    const field = settingsFieldByHeadsetType[this.headsetType()];
-    const config = field ? settings?.[field] as BaseHeadsetConfig : undefined;
-    const resolution = info?.resolution;
-    if (!resolution) {
-      return undefined;
-    }
+    const { resolution, config } = data;
     const projections = {
       left: this.pickProjection(resolution.projectionLeft, resolution.fovX, resolution.fovY),
       right: this.pickProjection(resolution.projectionRight, resolution.fovX, resolution.fovY),
@@ -178,7 +145,6 @@ export class FovChartComponent implements OnDestroy {
       }
     }
 
-    const profileName = config?.distortionProfile ?? '';
     return {
       leftPath: left ? outlineToSvgPath(left.outline) : '',
       rightPath: right ? outlineToSvgPath(right.outline) : '',
@@ -192,7 +158,7 @@ export class FovChartComponent implements OnDestroy {
       viewBox: `${-viewSize} ${-viewSize} ${viewSize * 2} ${viewSize * 2}`,
       stereoOverlap: metrics.stereoOverlapDegrees.toFixed(1),
       sphereCoverage: metrics.sphereCoveragePercent.toFixed(2),
-      profileName: DistortionProfileDisplayNames.get(profileName) ?? profileName,
+      profileName: data.profileName,
     };
   });
 
