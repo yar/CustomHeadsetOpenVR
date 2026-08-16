@@ -32,6 +32,8 @@ public:
 	bool HandleDevicePoseUpdated(uint32_t openVRID, vr::DriverPose_t &pose);
 	// handle hook of TrackedDeviceAdded
 	bool HandleDeviceAdded(const char* &pchDeviceSerialNumber, vr::ETrackedDeviceClass &eDeviceClass, vr::ITrackedDeviceServerDriver* &pDriver);
+	// handle hook of SetDisplayEyeToHead, records the transforms of the hmd for the GUI and never changes them
+	void HandleDisplayEyeToHead(uint32_t unWhichDevice, const vr::HmdMatrix34_t &eyeToHeadLeft, const vr::HmdMatrix34_t &eyeToHeadRight);
 	// set of driver conexts collected by the hooking process
 	std::set<vr::IVRDriverContext*> driverContexts = {};
 	// map of driver contexts by device id

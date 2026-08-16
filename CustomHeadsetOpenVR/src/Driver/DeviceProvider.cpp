@@ -338,6 +338,14 @@ bool CustomHeadsetDeviceProvider::HandleDevicePoseUpdated(uint32_t openVRID, vr:
 	return true;
 }
 
+void CustomHeadsetDeviceProvider::HandleDisplayEyeToHead(uint32_t unWhichDevice, const vr::HmdMatrix34_t &eyeToHeadLeft, const vr::HmdMatrix34_t &eyeToHeadRight){
+	if(unWhichDevice != vr::k_unTrackedDeviceIndex_Hmd){
+		return;
+	}
+	// whoever set it last is what SteamVR uses, so this is the truth for the eye position visualization
+	driverConfigLoader.SetEyeToHead(eyeToHeadLeft.m, eyeToHeadRight.m);
+}
+
 bool CustomHeadsetDeviceProvider::HandleDeviceAdded(const char *&pchDeviceSerialNumber, vr::ETrackedDeviceClass &eDeviceClass, vr::ITrackedDeviceServerDriver *&pDriver){
 	#ifdef HAS_PRIVATE
 	if(driverConfig.onlyHandlePrivateFunctionality){

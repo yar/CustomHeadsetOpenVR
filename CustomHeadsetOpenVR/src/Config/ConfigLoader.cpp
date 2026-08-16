@@ -630,6 +630,25 @@ ordered_json baseHeadsetInfo(Config::BaseHeadsetConfig& headsetConfig){
 	}
 	return result;
 }
+// serialize a row major 3x4 matrix as nested arrays
+static ordered_json matrix34ToJson(const double matrix[3][4]){
+	ordered_json rows = ordered_json::array();
+	for(int row = 0; row < 3; row++){
+		rows.push_back(ordered_json::array({matrix[row][0], matrix[row][1], matrix[row][2], matrix[row][3]}));
+	}
+	return rows;
+}
+void ConfigLoader::SetEyeToHead(const float left[3][4], const float right[3][4]){
+	std::lock_guard<std::mutex> lock(infoWriteLock);
+	for(int row = 0; row < 3; row++){
+		for(int column = 0; column < 4; column++){
+			info.eyeToHeadLeft[row][column] = left[row][column];
+			info.eyeToHeadRight[row][column] = right[row][column];
+		}
+	}
+	info.eyeToHeadValid = true;
+	info.needToWrite = true;
+}
 void ConfigLoader::WriteInfo(){
 	std::lock_guard<std::mutex> lock(infoWriteLock);
 	info.needToWrite = false;
@@ -738,6 +757,11 @@ void ConfigLoader::WriteInfo(){
 				{"renderResolution100PercentY", info.renderResolution100PercentY},
 				{"outputResolutionX", info.outputResolutionX},
 				{"outputResolutionY", info.outputResolutionY},
+			}},
+			{"eyes", {
+				{"valid", info.eyeToHeadValid},
+				{"eyeToHeadLeft", matrix34ToJson(info.eyeToHeadLeft)},
+				{"eyeToHeadRight", matrix34ToJson(info.eyeToHeadRight)},
 			}},
 			{"connectedHeadset", (int)info.connectedHeadset},
 			{"nonNativeHeadsetFound", info.nonNativeHeadsetFound},

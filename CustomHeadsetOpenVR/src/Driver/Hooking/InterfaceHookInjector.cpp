@@ -17,6 +17,9 @@ static Hook<void(*)(vr::IVRServerDriverHost *, uint32_t, const vr::DriverPose_t 
 static Hook<void(*)(vr::IVRServerDriverHost *_this, const char *pchDeviceSerialNumber, vr::ETrackedDeviceClass eDeviceClass, vr::ITrackedDeviceServerDriver *pDriver)>
 	TrackedDeviceAddedHook006("IVRServerDriverHost006::TrackedDeviceAdded");
 
+static Hook<void(*)(vr::IVRServerDriverHost *_this, uint32_t unWhichDevice, const vr::HmdMatrix34_t &eyeToHeadLeft, const vr::HmdMatrix34_t &eyeToHeadRight)>
+	SetDisplayEyeToHeadHook006("IVRServerDriverHost006::SetDisplayEyeToHead");
+
 static void DetourTrackedDevicePoseUpdated005(vr::IVRServerDriverHost *_this, uint32_t unWhichDevice, const vr::DriverPose_t &newPose, uint32_t unPoseStructSize)
 {
 	//TRACE("ServerTrackedDeviceProvider::DetourTrackedDevicePoseUpdated(%d)", unWhichDevice);
@@ -52,6 +55,13 @@ static void DetourTrackedDeviceAdded006(vr::IVRServerDriverHost *_this, const ch
 	}
 }
 
+// observe the eye to head transforms any driver hands to SteamVR, always passed through unchanged
+static void DetourSetDisplayEyeToHead006(vr::IVRServerDriverHost *_this, uint32_t unWhichDevice, const vr::HmdMatrix34_t &eyeToHeadLeft, const vr::HmdMatrix34_t &eyeToHeadRight)
+{
+	Driver->HandleDisplayEyeToHead(unWhichDevice, eyeToHeadLeft, eyeToHeadRight);
+	SetDisplayEyeToHeadHook006.originalFunc(_this, unWhichDevice, eyeToHeadLeft, eyeToHeadRight);
+}
+
 static void *DetourGetGenericInterface(vr::IVRDriverContext *_this, const char *pchInterfaceVersion, vr::EVRInitError *peError)
 {
 	Driver->driverContexts.insert(_this);  // Store the driver context for later use
@@ -79,6 +89,12 @@ static void *DetourGetGenericInterface(vr::IVRDriverContext *_this, const char *
 		{
 			TrackedDeviceAddedHook006.CreateHookInObjectVTable(originalInterface, 0, &DetourTrackedDeviceAdded006);
 			IHook::Register(&TrackedDeviceAddedHook006);
+		}
+		if (!IHook::Exists(SetDisplayEyeToHeadHook006.name))
+		{
+			// SetDisplayEyeToHead is the 10th entry of IVRServerDriverHost_006
+			SetDisplayEyeToHeadHook006.CreateHookInObjectVTable(originalInterface, 9, &DetourSetDisplayEyeToHead006);
+			IHook::Register(&SetDisplayEyeToHeadHook006);
 		}
 	}
 
