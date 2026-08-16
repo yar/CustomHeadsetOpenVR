@@ -1,10 +1,9 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DriverInfoService } from '../../services/driver-info.service';
 import { DriverSettingService } from '../../services/driver-setting.service';
 import { BaseHeadsetConfig, HeadsetType } from '../../services/JsonFileDefines';
-import { DistortionProfileDisplayNames } from '../../pages/devices/DeviceConfigComponentBase';
 import { settingsFieldByHeadsetType } from '../fov-chart/headset-fields';
+import { DistortionProfileLookupService } from '../distortion/distortion-profile-lookup.service';
 import { CurvePoint, knotsFromFlat, sampleCurve, smoothPoints } from './radial-bezier-curves';
 
 type Facet = {
@@ -60,10 +59,10 @@ export class FovCaChartComponent {
   /** the profile name currently selected on the page, an input for the same reason as the scale */
   profileNameInput = input<string | null | undefined>(undefined, { alias: 'profile' });
 
-  private dis = inject(DriverInfoService);
   private dss = inject(DriverSettingService);
+  private lookup = inject(DistortionProfileLookupService);
 
-  /** the profile selected on this page, resolved to its curve definition */
+  /** the profile selected on this page, resolved to its curve definition like the driver resolves it */
   private profile = computed(() => {
     const settings = this.dss.values();
     const field = settingsFieldByHeadsetType[this.headsetType()];
@@ -72,21 +71,15 @@ export class FovCaChartComponent {
     if (!name || name === 'None') {
       return null;
     }
-    const builtIn = this.dis.values()?.builtInDistortionProfiles?.[name];
-    if (builtIn) {
-      return { name, type: builtIn.type, green: builtIn.distortions, red: builtIn.distortionsRed, blue: builtIn.distortionsBlue, config };
-    }
-    const file = this.dss.distortionProfileList().find(p => p.name === name + '.json' || p.name === name);
-    if (file) {
-      return { name, type: file.type, green: file.distortions, red: file.distortionsRed, blue: file.distortionsBlue, config };
-    }
-    return { name, type: undefined, green: undefined, red: undefined, blue: undefined, config };
+    const resolved = this.lookup.resolve(name);
+    const definition = resolved.definition;
+    return {
+      name, displayName: resolved.displayName, type: definition?.type,
+      green: definition?.distortions, red: definition?.distortionsRed, blue: definition?.distortionsBlue, config
+    };
   });
 
-  profileName = computed(() => {
-    const p = this.profile();
-    return p ? (DistortionProfileDisplayNames.get(p.name) ?? p.name) : '';
-  });
+  profileName = computed(() => this.profile()?.displayName ?? '');
 
   /** why nothing can be drawn, empty when the chart is available */
   unavailableReason = computed(() => {
