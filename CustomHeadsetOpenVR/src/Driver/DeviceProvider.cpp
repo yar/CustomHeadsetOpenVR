@@ -19,6 +19,7 @@
 #include "../Helpers/EyeTrackingOutput.h"
 #include "../Helpers/AAPVRBlocker.h"
 #include "../Helpers/MiscHelper.h"
+#include "../Helpers/LighthouseGeometry.h"
 
 #include "../Config/ConfigLoader.h"
 
@@ -70,6 +71,13 @@ vr::EVRInitError CustomHeadsetDeviceProvider::Init(vr::IVRDriverContext *pDriver
 	WriteHasBeenRunSetting(driverName.c_str());
 	
 	driverConfigLoader.Start();
+	// the lighthouse geometry belongs to the headset of the session that wrote it, drop the previous one
+	#ifdef HAS_PRIVATE
+	if(!driverConfig.onlyHandlePrivateFunctionality)
+	#endif
+	{
+		LighthouseGeometry::Clear(driverConfigLoader.GetConfigFolder());
+	}
 	// inject hooks into functions
 	InjectHooks(this, pDriverContext);
 	hidModifier.InjectHooks();
