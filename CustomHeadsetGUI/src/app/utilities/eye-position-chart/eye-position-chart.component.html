@@ -1,0 +1,94 @@
+@if(visible() && chart(); as vm) {
+<div class="eye-chart-card">
+  <div class="eye-chart-header">
+    <span class="eye-chart-title" i18n>Eye Position vs. Tracking Sensors</span>
+    <span class="eye-chart-hint" i18n>Where SteamVR places the eyes relative to the lighthouse sensors</span>
+    @if(notLive()) {
+      <span class="stale-badge" i18n>not live — last known data</span>
+    }
+    <span class="spacer"></span>
+    @if(vm.headOverridden) {
+      <span class="override-badge" i18n>head frame overridden in settings</span>
+    }
+    @if(vm.modelNumber) {
+      <span class="model-name">{{vm.modelNumber}}</span>
+    }
+  </div>
+  <div class="eye-chart-body">
+    @for(view of vm.views; track view.kind) {
+      <div class="view">
+        <svg [attr.viewBox]="view.viewBox" [style.width.px]="view.widthPx" [style.height.px]="view.heightPx" preserveAspectRatio="xMidYMid meet">
+          <path class="grid" [attr.d]="view.gridPath" />
+          <path class="axis" [attr.d]="view.axisPath" />
+          @if(view.frontPlane; as plane) {
+            <line class="front-plane" [attr.x1]="plane.x1" [attr.y1]="plane.y1" [attr.x2]="plane.x2" [attr.y2]="plane.y2" />
+          }
+          @for(sensor of view.sensors; track $index) {
+            @if(sensor.hasTick) {
+              <line class="sensor-tick" [attr.x1]="sensor.x" [attr.y1]="sensor.y" [attr.x2]="sensor.tickX" [attr.y2]="sensor.tickY" />
+            }
+            <circle class="sensor" [attr.cx]="sensor.x" [attr.cy]="sensor.y" r="1.6" />
+          }
+          @if(view.originalOrigin; as original) {
+            <path class="origin original" [attr.d]="'M' + (original.x - 4) + ' ' + original.y + 'H' + (original.x + 4) + 'M' + original.x + ' ' + (original.y - 4) + 'V' + (original.y + 4)" />
+            <text class="mark-label origin-label" [attr.x]="original.x + 4.5" [attr.y]="original.y + 6.5" i18n>device head</text>
+          }
+          @for(eye of view.eyes; track eye.cls) {
+            <circle [class]="'eyeball ' + eye.cls" [attr.cx]="eye.ball.x" [attr.cy]="eye.ball.y" [attr.r]="eye.ballRadius" />
+            @if(eye.look; as look) {
+              <line [class]="'look ' + eye.cls" [attr.x1]="eye.pupil.x" [attr.y1]="eye.pupil.y" [attr.x2]="look.x" [attr.y2]="look.y" />
+            }
+            <circle [class]="'pupil ' + eye.cls" [attr.cx]="eye.pupil.x" [attr.cy]="eye.pupil.y" r="1.5" />
+          }
+          <path class="origin" [attr.d]="'M' + (view.origin.x - 4) + ' ' + view.origin.y + 'H' + (view.origin.x + 4) + 'M' + view.origin.x + ' ' + (view.origin.y - 4) + 'V' + (view.origin.y + 4)" />
+          <text class="mark-label origin-label" [attr.x]="view.origin.x + 4.5" [attr.y]="view.origin.y - 3" i18n>pose origin</text>
+          @if(view.depthDimension; as dim) {
+            <line class="dimension" [attr.x1]="dim.x1" [attr.y1]="dim.y1" [attr.x2]="dim.x2" [attr.y2]="dim.y2" />
+            @if(dim.vertical) {
+              <line class="dimension" [attr.x1]="dim.x1 - 2.5" [attr.y1]="dim.y1" [attr.x2]="dim.x1 + 2.5" [attr.y2]="dim.y1" />
+              <line class="dimension" [attr.x1]="dim.x2 - 2.5" [attr.y1]="dim.y2" [attr.x2]="dim.x2 + 2.5" [attr.y2]="dim.y2" />
+              <text class="dimension-label" [attr.x]="dim.labelX" [attr.y]="dim.labelY + 1.5" text-anchor="start">{{dim.text}}</text>
+            } @else {
+              <line class="dimension" [attr.x1]="dim.x1" [attr.y1]="dim.y1 - 2.5" [attr.x2]="dim.x1" [attr.y2]="dim.y1 + 2.5" />
+              <line class="dimension" [attr.x1]="dim.x2" [attr.y1]="dim.y2 - 2.5" [attr.x2]="dim.x2" [attr.y2]="dim.y2 + 2.5" />
+              <text class="dimension-label" [attr.x]="dim.labelX" [attr.y]="dim.labelY" text-anchor="middle">{{dim.text}}</text>
+            }
+          }
+          @for(label of view.labels; track $index) {
+            <text [class]="'view-label ' + label.cls" [attr.x]="label.x" [attr.y]="label.y" [attr.text-anchor]="label.anchor">{{label.text}}</text>
+          }
+        </svg>
+        <div class="view-name">
+          @switch(view.kind) {
+            @case('top') { <span i18n>Top view</span> }
+            @case('side') { <span i18n>Side view, from the left</span> }
+            @case('rear') { <span i18n>Rear view, as worn</span> }
+          }
+        </div>
+      </div>
+    }
+  </div>
+  <div class="eye-chart-legend">
+    <span class="legend-item"><span class="swatch pupil-left"></span><span i18n>left eye camera</span></span>
+    <span class="legend-item"><span class="swatch pupil-right"></span><span i18n>right eye camera</span></span>
+    <span class="legend-item"><span class="swatch eyeball"></span><span i18n>eyeball for scale</span></span>
+    <span class="legend-item"><span class="swatch sensor"></span><span i18n>optical sensor with facing direction</span></span>
+    <span class="legend-item"><span class="swatch origin"></span><span i18n>tracked pose origin</span></span>
+    @if(vm.headOverridden) {
+      <span class="legend-item"><span class="swatch origin original"></span><span i18n>pose origin before the override</span></span>
+    }
+  </div>
+  <div class="eye-chart-readout">
+    @for(row of vm.rows; track row.label) {
+      <div class="readout-row">
+        <span class="readout-label">{{row.label}}</span>
+        <span class="readout-value">{{row.value}}</span>
+      </div>
+    }
+  </div>
+  <div class="eye-chart-notes">
+    <span class="note" i18n>SteamVR renders each eye from its pupil marker. The cross is the tracked pose origin, the point the headset's tracking config declares to be between the user's pupils, and the tracking reports every movement about it. The dots are the optical sensors of the tracking config with a tick showing the direction each one faces, the dashed line is the plane of the front-most sensor.</span>
+    <span class="note" i18n>If the world seems to swing when you turn your head, compare where your real pupils sit relative to the sensors with these markers.</span>
+  </div>
+</div>
+}

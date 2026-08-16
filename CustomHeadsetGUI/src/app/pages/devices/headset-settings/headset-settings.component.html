@@ -371,6 +371,9 @@
   </div>
   }
 
+  <!-- Where SteamVR places the eyes relative to the lighthouse sensors, only for lighthouse tracked headsets, revealed from the row below -->
+  <app-eye-position-chart #eyeChart [headsetType]="headsetType()" [visible]="showEyeChart()" />
+
   <!-- Viewpoint Depth Correction, only once the driver knows the setting -->
   @if(defaults.viewpointDepthCorrection !== undefined) {
   <div class="field">
@@ -387,6 +390,13 @@
       <mat-slider max="50" min="-50" step="0.5">
         <input matSliderThumb [(ngModel)]="settings.viewpointDepthCorrection" (ngModelChange)="saveConfigSettings()">
       </mat-slider>
+      <!-- the chart only exists for lighthouse tracked headsets, then it can be folded out above this row -->
+      @if(eyeChart.chart()) {
+        <button mat-stroked-button class="eye-chart-toggle" (click)="showEyeChart.set(!showEyeChart())">
+          @if(showEyeChart()) { <span i18n>Hide chart</span> }
+          @else { <span i18n>Show chart</span> }
+        </button>
+      }
     </div>
   </div>
   }
