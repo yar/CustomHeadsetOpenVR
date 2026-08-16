@@ -205,6 +205,9 @@ void parseBaseHeadsetConfig(json headsetData, Config::BaseHeadsetConfig& headset
 		if(headsetData["recenterPimaxPlayspace"].is_boolean()){
 			pimaxConfig->recenterPimaxPlayspace = headsetData["recenterPimaxPlayspace"].get<bool>();
 		}
+		if(headsetData["recenterEyeHeight"].is_number()){
+			pimaxConfig->recenterEyeHeight = headsetData["recenterEyeHeight"].get<double>();
+		}
 		if(headsetData["enablePimaxPassthrough"].is_boolean()){
 			pimaxConfig->enablePimaxPassthrough = headsetData["enablePimaxPassthrough"].get<bool>();
 		}
@@ -605,6 +608,7 @@ ordered_json baseHeadsetInfo(Config::BaseHeadsetConfig& headsetConfig){
 	// Handle Pimax-specific config via runtime type check
 	if(Config::PimaxHeadsetConfig* pimaxConfig = dynamic_cast<Config::PimaxHeadsetConfig*>(&headsetConfig)){
 		result["recenterPimaxPlayspace"] = pimaxConfig->recenterPimaxPlayspace;
+		result["recenterEyeHeight"] = pimaxConfig->recenterEyeHeight;
 		result["enablePimaxPassthrough"] = pimaxConfig->enablePimaxPassthrough;
 		result["forcePimaxPassthrough"] = pimaxConfig->forcePimaxPassthrough;
 	}
@@ -627,6 +631,12 @@ void ConfigLoader::SetEyeToHead(const float left[3][4], const float right[3][4])
 		}
 	}
 	info.eyeToHeadValid = true;
+	info.needToWrite = true;
+}
+void ConfigLoader::SetRecenterState(uint64_t requestTime, const std::string& state){
+	std::lock_guard<std::mutex> lock(infoWriteLock);
+	info.recenterRequestTime = requestTime;
+	info.recenterState = state;
 	info.needToWrite = true;
 }
 void ConfigLoader::WriteInfo(){
@@ -741,6 +751,12 @@ void ConfigLoader::WriteInfo(){
 		{"connectedHeadset", (int)info.connectedHeadset},
 		{"nonNativeHeadsetFound", info.nonNativeHeadsetFound},
 		{"isDashboardOpen", info.isDashboardOpen},
+		{"pimaxSlamActive", info.pimaxSlamActive},
+		{"recenter", {
+			{"requestTime", info.recenterRequestTime},
+			{"state", info.recenterState},
+			{"universeId", info.recenterUniverseId},
+		}},
 		{"debugLog", info.debugLog},
 		{"driverName", info.driverName},
 		{"driverResources", info.driverResources},
@@ -849,6 +865,36 @@ void ConfigLoader::ReadInfo(){
 	}
 }
 
+void ConfigLoader::ParseCommands(){
+	std::string commandsPath = GetConfigFolder() + "commands.json";
+	std::ifstream commandsFile(commandsPath);
+	if(!commandsFile.is_open()){
+		// the file only exists once a utility has made a request
+		return;
+	}
+	try{
+		json data = json::parse(commandsFile, nullptr, true, true);
+		if(json& recenterJson = data["recenter"]; recenterJson.is_object() && recenterJson["time"].is_number()){
+			DriverCommands::Recenter recenter;
+			recenter.time = recenterJson["time"].get<uint64_t>();
+			recenter.finish = recenterJson["phase"].is_string() && recenterJson["phase"].get<std::string>() == "finish";
+			if(json& standingJson = recenterJson["standing"]; standingJson.is_object() && standingJson["translation"].is_array() && standingJson["translation"].size() == 3){
+				recenter.hasStanding = true;
+				for(int i = 0; i < 3; i++){
+					recenter.standingTranslation[i] = standingJson["translation"][i].get<double>();
+				}
+				if(standingJson["yaw"].is_number()){
+					recenter.standingYaw = standingJson["yaw"].get<double>();
+				}
+			}
+			driverCommands.SetRecenter(recenter);
+		}
+	}catch(const std::exception& e){
+		// a half written file also lands here, the next change notification reads it again
+		DriverLog("Failed to parse commands.json: %s", e.what());
+	}
+}
+
 void ConfigLoader::WriteDiagnosticInfo(){
 	std::lock_guard<std::mutex> lock(diagnosticWriteLock);
 	std::string diagnosticPath = GetConfigFolder() + "diagnostic.json";
@@ -923,9 +969,11 @@ void ConfigLoader::WatcherThread(){
 		pNotify = (FILE_NOTIFY_INFORMATION*)buffer;
 		bool hasReloadedConfig = false;
 		bool hasReloadedInfo = false;
-		do{
+		bool hasReloadedCommands = false;
+		while(true){
 			std::wstring fileName(pNotify->FileName, pNotify->FileNameLength / sizeof(wchar_t));
-			if(!hasReloadedConfig && fileName == L"settings.json" && (pNotify->Action == FILE_ACTION_MODIFIED || pNotify->Action == FILE_ACTION_ADDED || pNotify->Action == FILE_ACTION_RENAMED_NEW_NAME)){
+			bool isWrite = pNotify->Action == FILE_ACTION_MODIFIED || pNotify->Action == FILE_ACTION_ADDED || pNotify->Action == FILE_ACTION_RENAMED_NEW_NAME;
+			if(!hasReloadedConfig && fileName == L"settings.json" && isWrite){
 				DriverLog("Config file changed, reloading...");
 				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 				while(driverConfig.hasBeenUpdated){
@@ -935,14 +983,23 @@ void ConfigLoader::WatcherThread(){
 				ParseConfig();
 				hasReloadedConfig = true;
 			}
-			if(watchInfo && !hasReloadedInfo && fileName == L"info.json" && (pNotify->Action == FILE_ACTION_MODIFIED || pNotify->Action == FILE_ACTION_ADDED || pNotify->Action == FILE_ACTION_RENAMED_NEW_NAME)){
+			if(watchInfo && !hasReloadedInfo && fileName == L"info.json" && isWrite){
 				DriverLog("Info file changed, reloading...");
 				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 				ReadInfo();
 				hasReloadedInfo = true;
 			}
+			if(!hasReloadedCommands && fileName == L"commands.json" && isWrite){
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				ParseCommands();
+				hasReloadedCommands = true;
+			}
+			if(pNotify->NextEntryOffset == 0){
+				// the last entry of the batch has been handled
+				break;
+			}
 			pNotify = (FILE_NOTIFY_INFORMATION*)((char*)pNotify + pNotify->NextEntryOffset);
-		}while(pNotify->NextEntryOffset != 0);
+		}
 		//DriverLog("Waiting for next change...");
 		std::this_thread::sleep_for(std::chrono::milliseconds(40));
 	}
@@ -1013,6 +1070,7 @@ void ConfigLoader::WatcherThread(){
 		
 		bool hasReloadedConfig = false;
 		bool hasReloadedInfo = false;
+		bool hasReloadedCommands = false;
 		while(i < length){
 			struct inotify_event *event = (struct inotify_event *) &buffer[i];
 			if(event->mask & IN_MODIFY || event->mask & IN_CREATE){
@@ -1033,6 +1091,11 @@ void ConfigLoader::WatcherThread(){
 						std::this_thread::sleep_for(std::chrono::milliseconds(10));
 						ReadInfo();
 						hasReloadedInfo = true;
+					}
+					if(fileName == "commands.json" && !hasReloadedCommands){
+						std::this_thread::sleep_for(std::chrono::milliseconds(10));
+						ParseCommands();
+						hasReloadedCommands = true;
 					}
 				}
 			}
@@ -1125,6 +1188,8 @@ void ConfigLoader::Start(){
 	
 	// load config for the first time
 	ParseConfig();
+	// and take note of any leftover requests, they are stale by now and only their times need to be known
+	ParseCommands();
 	
 	bool onlyHandlePrivateFunctionality = false;
 	#ifdef HAS_PRIVATE
@@ -1177,3 +1242,5 @@ void ConfigLoader::Start(){
 
 
 ConfigLoader driverConfigLoader = {};
+
+DriverCommands driverCommands = {};

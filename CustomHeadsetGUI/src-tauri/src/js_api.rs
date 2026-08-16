@@ -184,6 +184,20 @@ pub fn kill_process(process_name: String) -> bool {
     found
 }
 
+/// A command for the given program that does not open a console window of its own on Windows,
+/// console tools like vrpathreg or vrcmd would otherwise flash one when started from this GUI.
+fn quiet_command(path: &std::path::PathBuf, args: &[String]) -> Command {
+    let mut command = Command::new(path);
+    command.args(args);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+    command
+}
+
 #[command]
 pub fn launch_process(path: String, args: Vec<String>) -> bool {
     use std::path::PathBuf;
@@ -192,7 +206,7 @@ pub fn launch_process(path: String, args: Vec<String>) -> bool {
     
     println!("Launching {:?} with args {:?}", path_buf, args);
     
-    match Command::new(&path_buf).args(&args).spawn() {
+    match quiet_command(&path_buf, &args).spawn() {
         Ok(_) => {
             println!("Successfully launched {:?}", path_buf);
             true
@@ -212,7 +226,7 @@ pub fn run_process_sync(path: String, args: Vec<String>) -> Result<i32, String> 
     
     println!("Running {:?} with args {:?}", path_buf, args);
     
-    match Command::new(&path_buf).args(&args).output() {
+    match quiet_command(&path_buf, &args).output() {
         Ok(output) => {
             println!("Finished {:?} with exit code {:?}", path_buf, output.status.code());
             Ok(output.status.code().unwrap_or(-1))

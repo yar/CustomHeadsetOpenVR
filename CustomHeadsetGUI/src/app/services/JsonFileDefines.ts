@@ -146,6 +146,8 @@ export type BaseHeadsetConfig = {
   proximitySensorType: number;
   // Pimax SLAM-specific settings, only present on Pimax headset configs
   recenterPimaxPlayspace?: boolean;
+  /** eye height in meters the floor is placed below the headset at when recentering from the GUI, absent on older drivers */
+  recenterEyeHeight?: number;
   enablePimaxPassthrough?: boolean;
 };
 
@@ -219,6 +221,8 @@ export type AppSetting = {
   launchPimaxOnStartup: boolean;
   lastPimaxLaunchMethod: 'steamvr' | 'legacy';
   installMethod: 'auto' | 'register' | 'copy';
+  /** seconds between pressing Recenter and the request going to the driver, time to put the headset on */
+  recenterDelaySeconds: number;
 }
 
 export const HeadsetType = {
@@ -252,7 +256,23 @@ export type DriverInfo = {
   eyes?: EyesInfo,
   driverVersion: string,
   connectedHeadset: number,
-  nonNativeHeadsetFound: boolean
+  nonNativeHeadsetFound: boolean,
+  /** true while the driver's Pimax SLAM implementation runs the headset, absent on older drivers */
+  pimaxSlamActive?: boolean,
+  /** outcome of the last recenter request made through commands.json, absent on older drivers */
+  recenter?: RecenterInfo
+}
+export type RecenterState = 'idle' | 'waiting' | 'zeroed' | 'done' | 'noTracking';
+export type RecenterInfo = {
+  /** the request time this answers, matches the time written to commands.json */
+  requestTime: number,
+  /**
+   * idle: no request this session, waiting: for the headset to be tracked, zeroed: the headset is held at the origin
+   * until the request is finished, done, or noTracking when it gave up
+   */
+  state: RecenterState,
+  /** the SteamVR tracking universe of the headset, whose room setup is reset while zeroed */
+  universeId?: number
 }
 export type EyesInfo = {
   /** false until a transform was set in the running session */
