@@ -284,6 +284,10 @@ public:
 	class PimaxHeadsetConfig : public BaseHeadsetConfig{
 	public:
 		bool recenterPimaxPlayspace = true;
+		// height of the eyes above the floor in meters that the headset is assumed to be at when the playspace is
+		// recentered on request from the GUI (commands.json), the floor is placed this far below the headset.
+		// changing it after a recenter moves the floor right away
+		double recenterEyeHeight = 1.65;
 		bool enablePimaxPassthrough = false;
 		bool forcePimaxPassthrough = false;
 		// if hand tracking data should be forwarded to SteamVR

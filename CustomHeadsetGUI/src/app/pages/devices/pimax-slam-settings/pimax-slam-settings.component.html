@@ -24,6 +24,42 @@
   </div>
 </div>
 
+<!-- Recenter Playspace Now, only drivers that answer the request offer the eye height it uses -->
+@if(settings && defaults && defaults.recenterEyeHeight !== undefined) {
+  <div class="field">
+    <div class="title">
+      <span i18n>Recenter Playspace Now</span>
+      <app-field-tip i18n-info info="Recenters the SteamVR playspace on the headset while it runs, without going through room setup: where the headset is becomes the center, the way it faces becomes forward, and the floor is placed the eye height below it. Press the button, put the headset on, stand or sit where the center should be and face forward before the delay runs out. SteamVR's own room origin (standing and seated) is reset to the headset as part of this, so an earlier room setup no longer offsets the space; its play area bounds are kept. Do it again after restarting SteamVR." />
+    </div>
+    <div class="control recenter-control">
+      <div class="recenter-row">
+        <button mat-stroked-button (click)="toggleRecenter()" [disabled]="!canRecenter() && recenterPhase() !== 'countdown'">{{ recenterButtonText() }}</button>
+        <span class="delay-label" i18n>Delay</span>
+        <input type="number" class="delay-input" [ngModel]="delaySeconds()" (ngModelChange)="setDelaySeconds($event)" min="0" max="60" step="1">
+        <span class="delay-unit" i18n>s</span>
+      </div>
+      <div class="recenter-status" [class.attention]="recenterPhase() === 'countdown'">{{ recenterStatusText() }}</div>
+    </div>
+  </div>
+
+  <!-- Eye Height -->
+  <div class="field">
+    <div class="title">
+      <span i18n>Eye Height</span>
+      <app-field-tip i18n-info info="How high your eyes are above the floor while you use the headset, in meters, standing or seated. Recentering places the floor this far below the headset. Standing, the eyes are about 11 cm below the top of the head, seated they are usually 1.1 to 1.3 m above the floor. Changing this after recentering moves the floor right away." />
+      <app-reset-button [canReset]="settings.recenterEyeHeight !== defaults.recenterEyeHeight"
+          (resetClick)="resetOption('recenterEyeHeight')"></app-reset-button>
+    </div>
+    <div class="control">
+      <input matInput [(ngModel)]="settings.recenterEyeHeight" step="0.01" (ngModelChange)="saveConfigSettings()"
+          type="number">
+      <mat-slider max="2.2" min="0.8" step="0.01">
+        <input matSliderThumb [(ngModel)]="settings.recenterEyeHeight" (ngModelChange)="saveConfigSettings()">
+      </mat-slider>
+    </div>
+  </div>
+}
+
 <!-- Enable Pimax Passthrough -->
 <div class="field">
   <app-field-note type="steamvrRestart" />
