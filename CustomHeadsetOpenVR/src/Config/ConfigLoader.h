@@ -32,6 +32,11 @@ public:
 		// output resolution of the compositor per eye
 		uint32_t outputResolutionX = 0;
 		uint32_t outputResolutionY = 0;
+		// the eye to head transforms last handed to SteamVR with SetDisplayEyeToHead, row major 3x4 in meters.
+		// these place the rendering cameras relative to the tracked pose, the GUI draws them against the lighthouse geometry
+		bool eyeToHeadValid = false;
+		double eyeToHeadLeft[3][4] = {};
+		double eyeToHeadRight[3][4] = {};
 		std::string debugLog = "";
 		std::string driverName = "";
 		std::string driverResources = "";
@@ -75,6 +80,8 @@ public:
 	DistortionProfileConfig ParseDistortionConfig(std::string name);
 	// save the info.json file to disk
 	void WriteInfo();
+	// remember the eye to head transforms handed to SteamVR and queue an info write
+	void SetEyeToHead(const float left[3][4], const float right[3][4]);
 	// read the info.json file from disk
 	void ReadInfo();
 	// write the diagnostic.json file to disk (high frequency, 4 times per second)
