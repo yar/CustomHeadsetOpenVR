@@ -314,6 +314,8 @@ export type BuiltInDistortionProfile = {
   smoothAmount?: number;
   offsetX?: number;
   offsetY?: number;
+  /** additional eye rotation in degrees the profile applies on top of the headset's eye rotation */
+  eyeRotationOffset?: number;
   /** the settings this profile was calibrated for, absent when the profile has no recommendation */
   recommendedMaxFovX?: number;
   recommendedMaxFovY?: number;
