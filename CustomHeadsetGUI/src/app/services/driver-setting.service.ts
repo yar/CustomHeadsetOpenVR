@@ -21,11 +21,16 @@ export type DistortionProfileFile = {
   recommendedMaxFovX?: number;
   recommendedMaxFovY?: number;
   recommendedEyeRotation?: number;
-  /** the RadialBezier curves, kept for the chromatic aberration visualizer */
+  /** the RadialBezier definition, kept so the charts can evaluate the profile like the driver does */
   type?: string;
   distortions?: number[];
   distortionsRed?: number[];
   distortionsBlue?: number[];
+  legacySmoothing?: boolean;
+  smoothAmount?: number;
+  offsetX?: number;
+  offsetY?: number;
+  eyeRotationOffset?: number;
   entry: DirEntry;
 };
 @Injectable({
@@ -82,6 +87,14 @@ export class DriverSettingService extends JsonSettingServiceBase<Settings> {
           if (Array.isArray(parsed[key]) && parsed[key].every((v: unknown) => typeof v === 'number')) {
             profile[key] = parsed[key];
           }
+        }
+        for (const key of ['smoothAmount', 'offsetX', 'offsetY', 'eyeRotationOffset'] as const) {
+          if (typeof parsed[key] === 'number') {
+            profile[key] = parsed[key];
+          }
+        }
+        if (typeof parsed.legacySmoothing === 'boolean') {
+          profile.legacySmoothing = parsed.legacySmoothing;
         }
       } catch (e) {
         // ignore parse errors
