@@ -39,6 +39,10 @@ export class PathsService {
   public get fovVisualizationPath(): string {
     return this._fovVisualizationPath;
   }
+  private _lighthouseGeometryPath!: string;
+  public get lighthouseGeometryPath(): string {
+    return this._lighthouseGeometryPath;
+  }
   async ensureAllDirCreated() {
     this._appDataDirPath = await this.getDriverAppDirPath();
     this._distortionDirPath = await this.getDriverAppDirPath('Distortion');
@@ -47,6 +51,7 @@ export class PathsService {
     this._settingPath = await this.getDriverAppDirPath('settings.json');
     this._diagnosticPath = await this.getDriverAppDirPath('diagnostic.json');
     this._fovVisualizationPath = await this.getDriverAppDirPath('fovVisualization.json');
+    this._lighthouseGeometryPath = await this.getDriverAppDirPath('lighthouseGeometry.json');
     if (!await exists(this.appDataDirPath)) {
       await mkdir(this.appDataDirPath);
     }

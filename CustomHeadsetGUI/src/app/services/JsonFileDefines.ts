@@ -248,9 +248,18 @@ export type DriverInfo = {
   defaultSettings: Settings;
   builtInDistortionProfiles: BuiltInDistortionProfiles;
   resolution: ResolutionInfo,
+  /** the eye to head transforms the driver last handed to SteamVR, absent on older drivers */
+  eyes?: EyesInfo,
   driverVersion: string,
   connectedHeadset: number,
   nonNativeHeadsetFound: boolean
+}
+export type EyesInfo = {
+  /** false until a transform was set in the running session */
+  valid: boolean,
+  /** row major 3x4 eye to head matrices in meters, the last column is the eye position in the head frame */
+  eyeToHeadLeft: number[][],
+  eyeToHeadRight: number[][]
 }
 export type ResolutionInfo = {
   fovX: number,

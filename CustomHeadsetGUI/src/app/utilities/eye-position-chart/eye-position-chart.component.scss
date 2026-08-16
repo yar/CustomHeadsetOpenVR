@@ -1,0 +1,303 @@
+// same WimFOV inspired look as the other charts, independent so they stay separable
+$wimfov-background: #FFFFE0;
+$wimfov-text: #1a1a1a;
+$wimfov-red: #FF0000;
+$wimfov-blue: #0000FF;
+
+:host {
+    display: block;
+}
+
+:host(.unavailable) {
+    display: none;
+}
+
+.eye-chart-card {
+    margin: 0.5rem 0;
+    padding: 8px 16px 6px 16px;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    background: $wimfov-background;
+    color: $wimfov-text;
+}
+
+.eye-chart-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    .eye-chart-title {
+        font-weight: 700;
+    }
+
+    .eye-chart-hint {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+
+    .stale-badge,
+    .override-badge {
+        color: #ffffff;
+        border-radius: 10px;
+        padding: 1px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .stale-badge {
+        background: #c77700;
+    }
+
+    .override-badge {
+        background: #7a3db8;
+    }
+
+    .spacer {
+        flex: 1 1 auto;
+    }
+
+    .model-name {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+}
+
+.eye-chart-body {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+
+    .view {
+        flex: 0 1 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        svg {
+            max-width: 100%;
+            background: #ffffff;
+            border: 1px solid #000000;
+        }
+
+        .view-name {
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+    }
+}
+
+.eye-chart-legend {
+    display: flex;
+    justify-content: center;
+    gap: 4px 16px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+    font-size: 11px;
+
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+    }
+
+    .swatch {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        box-sizing: border-box;
+
+        &.pupil-left {
+            border-radius: 50%;
+            background: $wimfov-red;
+        }
+
+        &.pupil-right {
+            border-radius: 50%;
+            background: $wimfov-blue;
+        }
+
+        &.eyeball {
+            border-radius: 50%;
+            border: 1.5px solid #666666;
+            background: #ffffff;
+        }
+
+        &.sensor {
+            border-radius: 50%;
+            background: #333333;
+        }
+
+        &.origin {
+            background:
+                linear-gradient(#000000, #000000) center / 1.5px 100% no-repeat,
+                linear-gradient(#000000, #000000) center / 100% 1.5px no-repeat;
+
+            &.original {
+                background:
+                    linear-gradient(#7a3db8, #7a3db8) center / 1.5px 100% no-repeat,
+                    linear-gradient(#7a3db8, #7a3db8) center / 100% 1.5px no-repeat;
+            }
+        }
+    }
+}
+
+.eye-chart-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin-top: 6px;
+
+    .readout-row {
+        display: flex;
+        gap: 8px;
+        font-size: 12px;
+        line-height: 1.35;
+
+        .readout-label {
+            flex: 0 0 11rem;
+            font-weight: 600;
+        }
+
+        .readout-value {
+            flex: 1 1 auto;
+        }
+    }
+}
+
+.eye-chart-notes {
+    display: flex;
+    flex-direction: column;
+    margin-top: 4px;
+
+    .note {
+        font-size: 11px;
+        line-height: 1.35;
+        color: #444444;
+    }
+}
+
+// svg styling, coordinates are millimeters of the head frame
+svg {
+    .grid {
+        fill: none;
+        stroke: #000000;
+        stroke-opacity: 0.08;
+        stroke-width: 0.3;
+    }
+
+    .axis {
+        fill: none;
+        stroke: #000000;
+        stroke-opacity: 0.25;
+        stroke-width: 0.4;
+    }
+
+    .front-plane {
+        stroke: #777777;
+        stroke-width: 0.5;
+        stroke-dasharray: 2 1.5;
+    }
+
+    .sensor {
+        fill: #333333;
+        stroke: none;
+    }
+
+    .sensor-tick {
+        stroke: #333333;
+        stroke-width: 0.6;
+        stroke-opacity: 0.7;
+    }
+
+    .origin {
+        fill: none;
+        stroke: #000000;
+        stroke-width: 0.9;
+
+        &.original {
+            stroke: #7a3db8;
+            stroke-dasharray: 1.5 1;
+        }
+    }
+
+    .eyeball {
+        fill: #ffffff;
+        fill-opacity: 0.6;
+        stroke-width: 0.6;
+
+        &.left {
+            stroke: $wimfov-red;
+        }
+
+        &.right {
+            stroke: $wimfov-blue;
+        }
+    }
+
+    .look {
+        stroke-width: 0.6;
+        stroke-dasharray: 2 1.5;
+
+        &.left {
+            stroke: $wimfov-red;
+        }
+
+        &.right {
+            stroke: $wimfov-blue;
+        }
+    }
+
+    .pupil {
+        stroke: none;
+
+        &.left {
+            fill: $wimfov-red;
+        }
+
+        &.right {
+            fill: $wimfov-blue;
+        }
+    }
+
+    .dimension {
+        stroke: #b00060;
+        stroke-width: 0.5;
+    }
+
+    .dimension-label {
+        fill: #b00060;
+        font-size: 4px;
+        font-weight: 700;
+        paint-order: stroke;
+        stroke: #ffffff;
+        stroke-width: 0.8;
+    }
+
+    .mark-label {
+        fill: #404040;
+        font-size: 3.6px;
+        font-weight: 600;
+        paint-order: stroke;
+        stroke: #ffffff;
+        stroke-width: 0.8;
+    }
+
+    .view-label {
+        fill: #404040;
+        font-size: 4px;
+        font-weight: 600;
+
+        &.scale {
+            fill: #808080;
+            font-size: 3.4px;
+            font-weight: 400;
+        }
+    }
+}

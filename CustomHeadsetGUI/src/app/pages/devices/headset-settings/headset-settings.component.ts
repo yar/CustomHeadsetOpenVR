@@ -16,6 +16,7 @@ import { ColorPickerComponent } from '../../../utilities/color-picker/color-pick
 import { FovChartComponent } from '../../../utilities/fov-chart/fov-chart.component';
 import { FovPanelChartComponent } from '../../../utilities/fov-panel-chart/fov-panel-chart.component';
 import { FovCaChartComponent } from '../../../utilities/fov-ca-chart/fov-ca-chart.component';
+import { EyePositionChartComponent } from '../../../utilities/eye-position-chart/eye-position-chart.component';
 import { DeviceConfigComponentBase } from '../DeviceConfigComponentBase';
 import { BaseHeadsetConfig, HeadsetType } from '../../../services/JsonFileDefines';
 
@@ -64,6 +65,7 @@ export interface HeadsetSettingsConfig {
     FovChartComponent,
     FovPanelChartComponent,
     FovCaChartComponent,
+    EyePositionChartComponent,
     CommonModule
   ],
   templateUrl: './headset-settings.component.html',
@@ -86,6 +88,7 @@ export class HeadsetSettingsComponent extends DeviceConfigComponentBase<BaseHead
   
   /** the chromatic aberration curve chart is opt in, revealed by the button next to its sliders */
   showCaChart = signal(false);
+  showEyeChart = signal(false);
 
   resolutionModel?: number; // index into resolutionOptions
   defaultResolutionIndex = computed(() => {
@@ -143,6 +146,13 @@ export class HeadsetSettingsComponent extends DeviceConfigComponentBase<BaseHead
       this.dis.values();
       if (this.defaults?.chromaticAberrationScaleRed === undefined) {
         this.showCaChart.set(false);
+      }
+    });
+    // same for the eye position chart, its button sits on the viewpoint depth correction row
+    effect(() => {
+      this.dis.values();
+      if (this.defaults?.viewpointDepthCorrection === undefined) {
+        this.showEyeChart.set(false);
       }
     });
   }
