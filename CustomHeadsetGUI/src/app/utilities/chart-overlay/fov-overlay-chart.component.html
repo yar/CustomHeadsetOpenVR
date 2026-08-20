@@ -2,7 +2,7 @@
 <div class="overlay-card">
   <div class="overlay-header">
     <span class="overlay-title" i18n>FOV Preview</span>
-    <span class="overlay-hint" i18n>The combined field of view of both eyes, one outline per entry</span>
+    <span class="overlay-hint" i18n>The field of view of each eye, two outlines per entry</span>
   </div>
   <div class="overlay-body">
     <svg [attr.viewBox]="vm.backdrop.viewBox" preserveAspectRatio="xMidYMid meet">
@@ -17,8 +17,11 @@
         <text class="ring-label" [attr.transform]="'translate(' + label.x + ',' + label.y + ') rotate(' + label.rotation + ')'">{{label.text}}</text>
       }
       @for(row of vm.rows; track row.entry.id) {
-        @if(row.path) {
-          <path class="entry-shape" [attr.d]="row.path" [attr.stroke]="row.entry.color" [attr.fill]="row.entry.color" />
+        @if(row.leftPath) {
+          <path class="entry-shape" [attr.d]="row.leftPath" [attr.stroke]="row.entry.color" [attr.fill]="row.entry.color" />
+        }
+        @if(row.rightPath) {
+          <path class="entry-shape" [attr.d]="row.rightPath" [attr.stroke]="row.entry.color" [attr.fill]="row.entry.color" />
         }
       }
       <path class="center-cross" d="M-3 0H3M0 -3V3" />
@@ -38,8 +41,8 @@
         @for(row of vm.rows; track row.entry.id) {
           <tr>
             <td class="entry-cell"><span class="dot" [style.background]="row.entry.color"></span>{{row.entry.label}}</td>
-            <td>{{format(row.hfov, 0)}}°</td>
-            <td>{{format(row.vfov, 0)}}°</td>
+            <td>{{format(row.hfov, 1)}}°</td>
+            <td>{{format(row.vfov, 1)}}°</td>
             <td>{{format(row.overlap, 1)}}°</td>
             <td>{{format(row.coverage, 1)}}%</td>
             <td class="source-cell">@if(row.source) { <app-chart-source-badge [source]="row.source" /> }</td>
