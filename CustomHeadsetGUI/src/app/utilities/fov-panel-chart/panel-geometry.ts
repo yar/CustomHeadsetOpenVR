@@ -178,7 +178,13 @@ export function contourSegments(field: Float64Array, size: number, iso: number, 
   return segments;
 }
 
-/** grid position of the smallest angle with parabolic sub cell refinement */
+/**
+ * Grid position of the smallest value of a field shaped like a cone around its minimum, like the view
+ * angle away from an axis. The value grows nearly linearly away from the minimum, so a parabola through
+ * the nodes around the kink would place the minimum too close to its node; instead each axis takes the
+ * midpoint of two crossings of an iso value, which the cone's symmetry puts at the true minimum, on
+ * slopes straight enough for linear interpolation.
+ */
 export function findCenter(field: Float64Array, size: number): Point {
   let bestIndex = 0;
   for (let n = 1; n < size * size; n++) {
@@ -186,21 +192,51 @@ export function findCenter(field: Float64Array, size: number): Point {
       bestIndex = n;
     }
   }
-  let i = bestIndex % size;
-  let j = Math.floor(bestIndex / size);
-  const refine = (previous: number, current: number, next: number) => {
-    const denominator = previous - 2 * current + next;
-    return Math.abs(denominator) < 1e-9 ? 0 : Math.min(Math.max((previous - next) / (2 * denominator), -0.5), 0.5);
+  const i = bestIndex % size;
+  const j = Math.floor(bestIndex / size);
+  return {
+    x: i + refineConeMinimum(t => field[j * size + t], i, size - 1),
+    y: j + refineConeMinimum(t => field[t * size + i], j, size - 1),
   };
-  let offsetI = 0;
-  let offsetJ = 0;
-  if (i > 0 && i < size - 1) {
-    offsetI = refine(field[j * size + i - 1], field[j * size + i], field[j * size + i + 1]);
+}
+
+/**
+ * Sub node offset of the minimum of a cone shaped 1d slice from the minimum node: the midpoint of the
+ * first crossings of an iso value walking out both ways. Near the grid edge, where a crossing may not
+ * exist, the intersection of the slopes on both sides of the node serves as fallback.
+ */
+function refineConeMinimum(valueAt: (node: number) => number, node: number, lastNode: number): number {
+  const value = valueAt(node);
+  // how much the field rises to the next node, the slope of the cone
+  const rise = Math.max(
+    node > 0 ? valueAt(node - 1) - value : 0,
+    node < lastNode ? valueAt(node + 1) - value : 0);
+  if (rise <= 0) {
+    return 0;
   }
-  if (j > 0 && j < size - 1) {
-    offsetJ = refine(field[(j - 1) * size + i], field[j * size + i], field[(j + 1) * size + i]);
+  // crossings a few nodes out: far enough from the kink at the minimum for linear interpolation,
+  // close enough to it that the two slopes still mirror each other
+  const iso = value + rise * 2.5;
+  const crossing = (direction: number): number | null => {
+    for (let t = node; t + direction >= 0 && t + direction <= lastNode; t += direction) {
+      const inner = valueAt(t);
+      const outer = valueAt(t + direction);
+      if (outer >= iso) {
+        return t + direction * (iso - inner) / (outer - inner);
+      }
+    }
+    return null;
+  };
+  const before = crossing(-1);
+  const after = crossing(1);
+  if (before !== null && after !== null) {
+    return (before + after) / 2 - node;
   }
-  return { x: i + offsetI, y: j + offsetJ };
+  if (node <= 0 || node >= lastNode) {
+    return 0;
+  }
+  // both nodes of the higher side lie on one straight slope, so the rise is the slope of both sides
+  return Math.min(Math.max((valueAt(node - 1) - valueAt(node + 1)) / (2 * rise), -0.5), 0.5);
 }
 
 /**
