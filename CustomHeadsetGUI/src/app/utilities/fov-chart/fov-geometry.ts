@@ -335,14 +335,3 @@ export function maxExtentOf(shapes: (EyeShape | null)[]): number {
   }
   return maxExtent;
 }
-
-/** the outline of the union of the eyes as a star shaped polygon in chart coordinates, from their extents */
-export function unionOutline(left: EyeShape | null, right: EyeShape | null): Point[] {
-  const points: Point[] = [];
-  for (let k = 0; k < EXTENT_SAMPLES; k++) {
-    const phi = (k / EXTENT_SAMPLES) * 2 * Math.PI;
-    const r = Math.max(left ? left.extents[k] : 0, right ? right.extents[k] : 0);
-    points.push({ x: r * Math.cos(phi), y: r * Math.sin(phi) });
-  }
-  return points;
-}
