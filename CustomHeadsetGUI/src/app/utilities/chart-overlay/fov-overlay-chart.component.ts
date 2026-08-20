@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ChartSourceBadgeComponent } from '../distortion/chart-source-badge.component';
 import { FovChartSourceKind, FovChartSourceService } from '../distortion/fov-chart-source.service';
 import {
-  computeMetrics, eyeShapesOf, maxExtentOf, outlineToSvgPath, polarBackdrop, PolarBackdrop, SPOKE_COUNT, unionOutline
+  computeMetrics, eyeShapesOf, maxExtentOf, outlineToSvgPath, polarBackdrop, PolarBackdrop, SPOKE_COUNT
 } from '../fov-chart/fov-geometry';
 import { OverlayEntry } from './overlay-entry';
 
@@ -11,8 +11,9 @@ type OverlayRow = {
   entry: OverlayEntry;
   /** where the entry's data comes from, undefined when it has none */
   source?: FovChartSourceKind;
-  /** the outline of both eyes together, empty when the entry has no data */
-  path: string;
+  /** the outline of each eye, empty when the entry has no data or the eye is disabled */
+  leftPath: string;
+  rightPath: string;
   hfov: number;
   vfov: number;
   overlap: number;
@@ -28,8 +29,9 @@ type OverlayViewModel = {
 const OUTER_MARGIN = 2;
 
 /**
- * The FOV previews of several headset and profile combinations on one polar chart: the combined
- * outline of both eyes per entry in the entry's color, with the numbers side by side below.
+ * The FOV previews of several headset and profile combinations on one polar chart: the outlines of
+ * both eyes per entry in the entry's color, kept separate so the binocular overlap of every entry
+ * stays visible, with the numbers side by side below.
  */
 @Component({
   selector: 'app-fov-overlay-chart',
@@ -49,7 +51,7 @@ export class FovOverlayChartComponent {
       const data = this.source.data(entry.headsetType, entry.profile);
       const shapes = data ? eyeShapesOf(data) : null;
       if (!shapes) {
-        rows.push({ entry, path: '', hfov: NaN, vfov: NaN, overlap: NaN, coverage: NaN });
+        rows.push({ entry, leftPath: '', rightPath: '', hfov: NaN, vfov: NaN, overlap: NaN, coverage: NaN });
         continue;
       }
       const metrics = computeMetrics(shapes.left, shapes.right);
@@ -57,7 +59,8 @@ export class FovOverlayChartComponent {
       rows.push({
         entry,
         source: data!.source,
-        path: outlineToSvgPath(unionOutline(shapes.left, shapes.right)),
+        leftPath: shapes.left ? outlineToSvgPath(shapes.left.outline) : '',
+        rightPath: shapes.right ? outlineToSvgPath(shapes.right.outline) : '',
         hfov: metrics.outer[0],
         vfov: metrics.outer[SPOKE_COUNT / 4],
         overlap: metrics.stereoOverlapDegrees,
