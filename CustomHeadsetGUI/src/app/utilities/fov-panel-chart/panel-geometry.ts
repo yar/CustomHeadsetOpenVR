@@ -65,7 +65,7 @@ export type AngleField = {
 export function computeAngleField(grid: PanelGrid, projection: EyeProjection, axis: Point = { x: 0, y: 0 }): AngleField {
   const count = grid.size * grid.size;
   const angle = new Float64Array(count);
-  const valid = new Uint8Array(count);
+  const valid = computeValidMask(grid);
   let maxValidAngle = 0;
   // the direction the angles are measured from: the optical axis of the lens, given as tangents in the
   // frame of the projection, zero when that frame is centered on it (see FovVisualizationData.opticalAxisLeft)
@@ -79,12 +79,22 @@ export function computeAngleField(grid: PanelGrid, projection: EyeProjection, ax
     const tangentY = projection.top + (projection.bottom - projection.top) * (y * 0.5 + 0.5);
     const cosine = (tangentX * axis.x + tangentY * axis.y + 1) / (Math.hypot(tangentX, tangentY, 1) * axisLength);
     angle[n] = Math.acos(Math.min(1, Math.max(-1, cosine))) * 180 / Math.PI;
-    if (Math.abs(x) <= 1 && Math.abs(y) <= 1) {
-      valid[n] = 1;
+    if (valid[n]) {
       maxValidAngle = Math.max(maxValidAngle, angle[n]);
     }
   }
   return { angle, valid, maxValidAngle };
+}
+
+/** 1 for every node that shows part of the rendered image, the mask that clips contours to the rendered area */
+export function computeValidMask(grid: PanelGrid): Uint8Array {
+  const valid = new Uint8Array(grid.size * grid.size);
+  for (let n = 0; n < valid.length; n++) {
+    if (Math.abs(grid.x[n]) <= 1 && Math.abs(grid.y[n]) <= 1) {
+      valid[n] = 1;
+    }
+  }
+  return valid;
 }
 
 /** how far outside the rendered image a node is, the rendered area boundary is the 1.0 contour */

@@ -4,8 +4,8 @@
  * map of a headset tab and the overlay of several profiles on the Charts tab.
  */
 import {
-  computeAngleField, computeCoverageField, computeHamField, contourSegments, EyeProjection, findCenter,
-  HamRadii, PanelGrid, Point, sampleField, segmentsToSvgPath, SeenSpaceMapping
+  computeAngleField, computeCoverageField, computeHamField, computeValidMask, contourSegments, EyeProjection,
+  findCenter, HamRadii, PanelGrid, Point, sampleField, segmentsToSvgPath, SeenSpaceMapping
 } from './panel-geometry';
 
 /** the sampling's grid, viewport and optical axes, the meta fields of FovVisualizationData */
@@ -99,9 +99,14 @@ export function panelDirectionSpot(grid: PanelGrid, projection: EyeProjection, m
   return { x: seen.x, y: -seen.y };
 }
 
-/** the hidden area mesh cut, based on the green channel like the compositor's clamping reference */
+/**
+ * the hidden area mesh cut, based on the green channel like the compositor's clamping reference.
+ * Masked to the rendered area like the angle contours: the corner cut field keeps extending past the
+ * rendered area boundary, but there the panel shows no image and the mesh does not exist.
+ */
 export function panelHamPath(greenGrid: PanelGrid, isRight: boolean, ham: HamRadii, mapping: SeenSpaceMapping): string {
-  const hamSegments = contourSegments(computeHamField(greenGrid, isRight, ham), greenGrid.size, 0);
+  const field = computeHamField(greenGrid, isRight, ham);
+  const hamSegments = contourSegments(field, greenGrid.size, 0, computeValidMask(greenGrid));
   return segmentsToSvgPath(hamSegments, mapping);
 }
 

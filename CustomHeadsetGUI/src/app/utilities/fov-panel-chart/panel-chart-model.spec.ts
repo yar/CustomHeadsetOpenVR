@@ -2,8 +2,8 @@ import { DistortionHeadsetConfig, evaluateDistortion } from '../distortion/disto
 import { DistortionProfileDefinition } from '../distortion/radial-bezier-profile';
 import harnessFixture from '../distortion/fixtures/driver-harness-cases.json';
 import { projectionFromResolution } from '../fov-chart/fov-geometry';
-import { findCenter, parseGrid } from './panel-geometry';
-import { drawPanelGrid, forwardLookDirection, panelDirectionSpot, panelMapping, panelOpticalAxis } from './panel-chart-model';
+import { findCenter, parseGrid, SeenSpaceMapping } from './panel-geometry';
+import { drawPanelGrid, forwardLookDirection, panelDirectionSpot, panelHamPath, panelMapping, panelOpticalAxis } from './panel-chart-model';
 
 function expectClose(actual: number, expected: number, tolerance: number, what: string): void {
   expect(Math.abs(actual - expected)).withContext(`${what}: got ${actual}, expected ${expected}`).toBeLessThanOrEqual(tolerance);
@@ -151,5 +151,29 @@ describe('panel angle map markers', () => {
     expect(separations[0]).toBeLessThan(0.058);
     expect(Math.abs(separations[0] - separations[1]) / separations[0])
       .withContext(`separations ${separations.join(' vs ')}`).toBeLessThanOrEqual(0.01);
+  });
+});
+
+describe('panelHamPath', () => {
+  it('keeps the hidden area cut inside the rendered area', () => {
+    const size = 33;
+    // a synthetic square panel showing render texture coordinates -1.5 to 1.5, so the rendered
+    // area covers the middle two thirds and the samples extrapolate beyond its boundary. The
+    // corner cut field would continue out there, but nothing may be drawn past two thirds.
+    const x = new Float64Array(size * size);
+    const y = new Float64Array(size * size);
+    for (let j = 0; j < size; j++) {
+      for (let i = 0; i < size; i++) {
+        x[j * size + i] = -1.5 + 3 * i / (size - 1);
+        y[j * size + i] = -1.5 + 3 * j / (size - 1);
+      }
+    }
+    const ham = { radiusTopOuter: 0.25, radiusTopInner: 0.25, radiusBottomInner: 0.25, radiusBottomOuter: 0.25 };
+    const path = panelHamPath({ size, x, y }, false, ham, new SeenSpaceMapping(size, 0, false, 100, 100));
+    const coordinates = path.match(/-?\d+\.\d+/g)!.map(Number);
+    expect(coordinates.length).withContext('the corner arcs are drawn').toBeGreaterThan(0);
+    for (const coordinate of coordinates) {
+      expect(Math.abs(coordinate)).toBeLessThanOrEqual(2 / 3);
+    }
   });
 });
