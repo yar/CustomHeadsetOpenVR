@@ -649,6 +649,42 @@ bool PopulateBuiltInDistortionProfiles(){
 	};
 	builtInDistortionProfiles[dreamAirSELikePimax.name] = dreamAirSELikePimax;
 
+	DistortionProfileConfig dreamAirSELikePimaxNativeCA = dreamAirSELikePimax;
+	dreamAirSELikePimaxNativeCA.name = "Dream Air SE like Pimax, original CA";
+	dreamAirSELikePimaxNativeCA.description = "The Dream Air SE like Pimax geometry carrying the chromatic aberration correction of the native Pimax profile instead of the camera calibrated one, for comparing the two. The native correction is stronger near the center but fades towards the rim, where the calibrated one keeps growing. Set Max FOV to 89.8x89.8 to render exactly the field the native profile shows.";
+	dreamAirSELikePimaxNativeCA.author = "Pimax";
+	dreamAirSELikePimaxNativeCA.recommendedMaxFovX = 89.8;
+	dreamAirSELikePimaxNativeCA.recommendedMaxFovY = 89.8;
+	dreamAirSELikePimaxNativeCA.distortionsRed = {
+		0.00, 0.51,
+		5.00, 0.52,
+		10.0, 0.50,
+		15.0, 0.50,
+		20.0, 0.49,
+		25.0, 0.47,
+		30.0, 0.43,
+		35.0, 0.38,
+		40.0, 0.32,
+		45.0, 0.26,
+		50.0, 0.22,
+		55.0, 0.16
+	};
+	dreamAirSELikePimaxNativeCA.distortionsBlue = {
+		0.00, -0.87,
+		5.00, -0.89,
+		10.0, -0.89,
+		15.0, -0.88,
+		20.0, -0.86,
+		25.0, -0.82,
+		30.0, -0.75,
+		35.0, -0.66,
+		40.0, -0.55,
+		45.0, -0.44,
+		50.0, -0.36,
+		55.0, -0.24
+	};
+	builtInDistortionProfiles[dreamAirSELikePimaxNativeCA.name] = dreamAirSELikePimaxNativeCA;
+
 	DistortionProfileConfig crystalOGLikePimax = {};
 	crystalOGLikePimax.name = "Crystal like Pimax";
 	crystalOGLikePimax.device = {"CrystalOG", "CrystalLight"};
