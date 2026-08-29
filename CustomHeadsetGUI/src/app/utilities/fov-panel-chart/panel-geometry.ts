@@ -342,13 +342,69 @@ export function sampleField(field: Float64Array, size: number, gridX: number, gr
   return v00 * (1 - fx) * (1 - fy) + v10 * fx * (1 - fy) + v01 * (1 - fx) * fy + v11 * fx * fy;
 }
 
-/** convert marching squares segments in grid coordinates to an SVG path in seen space (SVG y down) */
+/**
+ * convert marching squares segments in grid coordinates to an SVG path in seen space (SVG y down).
+ * Segments sharing an endpoint become one polyline: a dash pattern restarts at every M, so per cell
+ * subpaths would cut it into dashes of irregular lengths instead of running it along the contour.
+ */
 export function segmentsToSvgPath(segments: number[], mapping: SeenSpaceMapping): string {
   const parts: string[] = [];
-  for (let s = 0; s < segments.length; s += 4) {
-    const a = mapping.gridToSeen(segments[s], segments[s + 1]);
-    const b = mapping.gridToSeen(segments[s + 2], segments[s + 3]);
-    parts.push(`M${a.x.toFixed(4)} ${(-a.y).toFixed(4)}L${b.x.toFixed(4)} ${(-b.y).toFixed(4)}`);
+  for (const polyline of chainSegments(segments)) {
+    const points = polyline.map(p => {
+      const seen = mapping.gridToSeen(p.x, p.y);
+      return `${seen.x.toFixed(4)} ${(-seen.y).toFixed(4)}`;
+    });
+    parts.push('M' + points.join('L'));
   }
   return parts.join('');
+}
+
+/**
+ * join per cell segments into polylines wherever they share an endpoint. Adjacent cells compute a
+ * shared edge crossing from the same node values with the same arithmetic, so endpoints match exactly.
+ */
+function chainSegments(segments: number[]): Point[][] {
+  const count = segments.length / 4;
+  const pointOf = (s: number, end: number): Point => ({ x: segments[s * 4 + end * 2], y: segments[s * 4 + end * 2 + 1] });
+  const keyOf = (p: Point) => `${p.x},${p.y}`;
+  const segmentsAt = new Map<string, number[]>();
+  for (let s = 0; s < count; s++) {
+    for (const end of [0, 1]) {
+      const key = keyOf(pointOf(s, end));
+      const list = segmentsAt.get(key);
+      if (list) {
+        list.push(s);
+      } else {
+        segmentsAt.set(key, [s]);
+      }
+    }
+  }
+  const used = new Uint8Array(count);
+  /** consume unused segments from a point for as long as one continues the line, return the points visited */
+  const walk = (from: Point): Point[] => {
+    const points: Point[] = [];
+    let tip = from;
+    while (true) {
+      const next = segmentsAt.get(keyOf(tip))?.find(s => !used[s]);
+      if (next === undefined) {
+        return points;
+      }
+      used[next] = 1;
+      const a = pointOf(next, 0);
+      tip = keyOf(a) === keyOf(tip) ? pointOf(next, 1) : a;
+      points.push(tip);
+    }
+  };
+  const polylines: Point[][] = [];
+  for (let s = 0; s < count; s++) {
+    if (used[s]) {
+      continue;
+    }
+    used[s] = 1;
+    const start = pointOf(s, 0);
+    const end = pointOf(s, 1);
+    // both directions, so the seed segment may sit anywhere along its polyline
+    polylines.push([...walk(start).reverse(), start, end, ...walk(end)]);
+  }
+  return polylines;
 }
