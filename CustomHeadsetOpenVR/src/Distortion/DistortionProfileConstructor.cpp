@@ -332,6 +332,66 @@ bool PopulateBuiltInDistortionProfiles(){
 	crystalSuperUltrawideDefault.description += " The screens in the ultrawide are moved outwards farther but otherwise the profile is the same.";
 	builtInDistortionProfiles[crystalSuperUltrawideDefault.name] = crystalSuperUltrawideDefault;
 
+	DistortionProfileConfig crystalSuper57LikePimax = {};
+	crystalSuper57LikePimax.name = "Crystal Super 57ppd like Pimax";
+	crystalSuper57LikePimax.device = {"CrystalSuper57PPD"};
+	crystalSuper57LikePimax.modifiedTime = 0;
+	crystalSuper57LikePimax.description = "Distortion profile for the Crystal Super 57PPD aiming to closely reproduce the geometric shape of the native Pimax rendering, including its chromatic aberration correction. The optical center sits 6.4% above the panel center and the profile follows the native rendering within 0.08 degrees. The eye rotation offset brings the configured 7 degrees to the 6 degree cant of the captured eye pose, the same cant as the other Crystal Super QLED engines. Set Max FOV to 88.6x86.1 to render exactly the field the native profile shows.";
+	crystalSuper57LikePimax.author = "Pimax";
+	crystalSuper57LikePimax.creationDate = 1787961600.0;
+	crystalSuper57LikePimax.type = "RadialBezier";
+	crystalSuper57LikePimax.offsetX = 0.0f;
+	crystalSuper57LikePimax.offsetY = 6.38f;
+	crystalSuper57LikePimax.eyeRotationOffset = -1.0;
+	crystalSuper57LikePimax.recommendedMaxFovX = 88.6;
+	crystalSuper57LikePimax.recommendedMaxFovY = 86.1;
+	// the capture's eye pose is 6 degrees, the default configuration has 7
+	crystalSuper57LikePimax.recommendedEyeRotation = 7.0;
+	crystalSuper57LikePimax.distortions = {
+		0.00, 0.000,
+		2.50, 6.178,
+		5.00, 12.356,
+		10.0, 24.731,
+		15.0, 37.043,
+		20.0, 49.212,
+		25.0, 61.070,
+		30.0, 72.513,
+		35.0, 83.307,
+		40.0, 93.783,
+		45.0, 103.411,
+		47.5, 107.698,
+		50.0, 112.366,
+		52.5, 117.083,
+		54.0, 120.085
+	};
+	crystalSuper57LikePimax.distortionsRed = {
+		0.00, 0.56,
+		5.00, 0.57,
+		10.0, 0.57,
+		15.0, 0.56,
+		20.0, 0.54,
+		25.0, 0.53,
+		30.0, 0.51,
+		35.0, 0.49,
+		40.0, 0.49,
+		45.0, 0.42,
+		50.0, 0.46
+	};
+	crystalSuper57LikePimax.distortionsBlue = {
+		0.00, -1.00,
+		5.00, -1.02,
+		10.0, -1.01,
+		15.0, -0.99,
+		20.0, -0.96,
+		25.0, -0.94,
+		30.0, -0.90,
+		35.0, -0.87,
+		40.0, -0.87,
+		45.0, -0.75,
+		50.0, -0.82
+	};
+	builtInDistortionProfiles[crystalSuper57LikePimax.name] = crystalSuper57LikePimax;
+
 	DistortionProfileConfig crystalSuperOledLikePimax = {};
 	crystalSuperOledLikePimax.name = "Crystal Super micro-OLED like Pimax";
 	crystalSuperOledLikePimax.device = {"CrystalSuperMicroOLED"};
