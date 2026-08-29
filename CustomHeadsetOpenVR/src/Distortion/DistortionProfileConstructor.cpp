@@ -458,9 +458,9 @@ bool PopulateBuiltInDistortionProfiles(){
 
 	DistortionProfileConfig crystalOGLikePimax = {};
 	crystalOGLikePimax.name = "Crystal like Pimax";
-	crystalOGLikePimax.device = {"CrystalOG"};
+	crystalOGLikePimax.device = {"CrystalOG", "CrystalLight"};
 	crystalOGLikePimax.modifiedTime = 0;
-	crystalOGLikePimax.description = "Distortion profile for the Pimax Crystal fitted from a capture of the distortion mesh rendered by the Pimax compositor, including its chromatic aberration correction. The optical center sits 7.0% above the panel center, so the field reaches noticeably further down than up, and the profile follows the capture within 0.1 degrees. The eye rotation offset brings the configured 4 degrees to the 5 degree cant of the captured eye pose. Set Max FOV to 92.3x93.1 to render exactly the field the native profile shows.";
+	crystalOGLikePimax.description = "Distortion profile for the Pimax Crystal fitted from a capture of the distortion mesh rendered by the Pimax compositor, including its chromatic aberration correction. The optical center sits 7.0% above the panel center, so the field reaches noticeably further down than up, and the profile follows the capture within 0.1 degrees. The eye rotation offset brings the configured 4 degrees to the 5 degree cant of the captured eye pose. Also fits the Crystal Light, whose native rendering geometry is identical to the Crystal's, including the eye poses. Set Max FOV to 92.3x93.1 to render exactly the field the native profile shows.";
 	crystalOGLikePimax.author = "Pimax";
 	crystalOGLikePimax.creationDate = 1786838400.0;
 	crystalOGLikePimax.type = "RadialBezier";
