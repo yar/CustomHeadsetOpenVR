@@ -489,6 +489,44 @@ bool PopulateBuiltInDistortionProfiles(){
 	};
 	builtInDistortionProfiles[crystalSuper50PPDDefault.name] = crystalSuper50PPDDefault;
 	
+	// Alternative to the 50ppd Default fitted from the compositor's warp mesh vertex buffer,
+	// which samples the Pimax lens model exactly instead of through its rasterization. The
+	// rasterized captures carry a 256/255 radial scale inflation from their texel convention;
+	// this refit removes it and uses the optical center measured from the mesh placement.
+	DistortionProfileConfig crystalSuper50PPDv1_1 = crystalSuper50PPDDefault;
+	crystalSuper50PPDv1_1.name = "Crystal Super 50ppd 1.1";
+	crystalSuper50PPDv1_1.device = {"CrystalSuper50PPD"};
+	crystalSuper50PPDv1_1.description = "Refit of the Crystal Super 50ppd Default from the compositor's warp mesh vertex buffer, which samples the Pimax lens model exactly instead of through its rasterization. The rasterized captures carried a 0.39% radial scale inflation that this profile removes, together with the exactly measured optical center sitting 3.82% above the panel center. The geometry follows the Pimax lens model within 0.05 degrees across the whole field and the chromatic aberration calibration is the same as the Default. Set Max FOV to 113.5x108.3 to render exactly the field the native profile shows.";
+	crystalSuper50PPDv1_1.creationDate = 1791849600.0;
+	crystalSuper50PPDv1_1.offsetY = 3.82f;
+	crystalSuper50PPDv1_1.distortions = {
+		0.00, 0.000,
+		2.50, 5.496,
+		5.00, 10.988,
+		7.50, 16.456,
+		10.0, 21.904,
+		15.0, 32.681,
+		20.0, 43.215,
+		25.0, 53.441,
+		30.0, 63.183,
+		35.0, 72.382,
+		40.0, 80.823,
+		42.5, 84.714,
+		45.0, 88.382,
+		47.5, 91.774,
+		50.0, 94.884,
+		52.5, 97.698,
+		55.0, 99.984,
+		57.5, 102.545,
+		60.0, 105.311,
+		61.0, 106.517,
+		62.5, 108.365,
+		64.0, 110.363,
+		65.0, 111.751,
+		66.0, 113.223
+	};
+	builtInDistortionProfiles[crystalSuper50PPDv1_1.name] = crystalSuper50PPDv1_1;
+	
 	DistortionProfileConfig crystalSuper57LikePimax = {};
 	crystalSuper57LikePimax.name = "Crystal Super 57ppd Default";
 	crystalSuper57LikePimax.device = {"CrystalSuper57PPD"};
