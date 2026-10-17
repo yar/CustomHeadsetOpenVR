@@ -639,6 +639,44 @@ bool PopulateBuiltInDistortionProfiles(){
 	crystalSuperUltrawideLikePimax.distortionsBlue = crystalSuper50PPDDefault.distortionsBlue;
 	builtInDistortionProfiles[crystalSuperUltrawideLikePimax.name] = crystalSuperUltrawideLikePimax;
 	
+	// Refit of the Ultrawide Default from the compositor's warp mesh vertex buffer, which
+	// samples the lens model exactly: removes the 256/255 radial scale inflation of the
+	// rasterized captures and uses the optical center from the mesh placement constant.
+	DistortionProfileConfig crystalSuperUltrawideV1_1 = crystalSuperUltrawideLikePimax;
+	crystalSuperUltrawideV1_1.name = "Crystal Super Ultrawide 1.1";
+	crystalSuperUltrawideV1_1.description = "Refit of the Crystal Super Ultrawide Default from the compositor's warp mesh vertex buffer, which samples the Pimax lens model exactly instead of through its rasterization. The rasterized captures carried a 0.39% radial scale inflation that drew peripheral content too far outwards, up to half a degree near the edges; this profile removes it and uses the exactly measured optical center sitting 6.36% towards the nose and 6.36% above the panel center. The geometry follows the Pimax lens model within 0.04 degrees across the whole field and the chromatic aberration calibration is the same as the Default. The Max FOV of 111x107 renders exactly the field the native profile shows.";
+	crystalSuperUltrawideV1_1.creationDate = 1792108800.0;
+	crystalSuperUltrawideV1_1.offsetX = -6.36f;
+	crystalSuperUltrawideV1_1.offsetY = 6.36f;
+	crystalSuperUltrawideV1_1.distortions = {
+		0.00, 0.000,
+		2.50, 5.385,
+		5.00, 10.766,
+		7.50, 16.136,
+		10.0, 21.494,
+		15.0, 32.136,
+		20.0, 42.609,
+		25.0, 52.850,
+		30.0, 62.690,
+		35.0, 72.049,
+		40.0, 80.722,
+		42.5, 84.769,
+		45.0, 88.629,
+		47.5, 92.283,
+		50.0, 95.721,
+		52.5, 98.902,
+		55.0, 101.260,
+		57.5, 103.787,
+		60.0, 106.571,
+		62.5, 109.619,
+		64.0, 111.614,
+		65.0, 113.004,
+		66.0, 114.479,
+		67.0, 116.014,
+		68.5, 118.484
+	};
+	builtInDistortionProfiles[crystalSuperUltrawideV1_1.name] = crystalSuperUltrawideV1_1;
+	
 
 	DistortionProfileConfig crystalOGLikePimax = {};
 	// crystalOGLikePimax.name = "Crystal OG like Pimax";
