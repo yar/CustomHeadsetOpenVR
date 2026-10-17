@@ -677,6 +677,46 @@ bool PopulateBuiltInDistortionProfiles(){
 	};
 	builtInDistortionProfiles[crystalSuperUltrawideV1_1.name] = crystalSuperUltrawideV1_1;
 	
+	DistortionProfileConfig crystalSuperUltrawideV1_1NativeCA = crystalSuperUltrawideV1_1;
+	crystalSuperUltrawideV1_1NativeCA.name = "Crystal Super Ultrawide 1.1, original CA";
+	crystalSuperUltrawideV1_1NativeCA.description = "The Crystal Super Ultrawide 1.1 geometry carrying the chromatic aberration correction of the native Pimax profile instead of the one taken over from the Crystal Super 50ppd, for comparing the two. The native correction is weaker, by 1.5 times near the center and 2.5 to 4 times in the outer half of the field. Set Max FOV to 111.9x107.9 to render exactly the field the native profile shows.";
+	crystalSuperUltrawideV1_1NativeCA.author = "Pimax, Yar";
+	crystalSuperUltrawideV1_1NativeCA.distortionsRed = {
+		0.00, 0.39,
+		5.00, 0.37,
+		10.0, 0.36,
+		15.0, 0.35,
+		20.0, 0.34,
+		25.0, 0.33,
+		30.0, 0.32,
+		35.0, 0.30,
+		40.0, 0.29,
+		45.0, 0.27,
+		50.0, 0.24,
+		55.0, 0.17,
+		60.0, 0.21,
+		65.0, 0.23,
+		68.5, 0.29
+	};
+	crystalSuperUltrawideV1_1NativeCA.distortionsBlue = {
+		0.00, -0.59,
+		5.00, -0.60,
+		10.0, -0.59,
+		15.0, -0.58,
+		20.0, -0.55,
+		25.0, -0.54,
+		30.0, -0.51,
+		35.0, -0.50,
+		40.0, -0.47,
+		45.0, -0.44,
+		50.0, -0.40,
+		55.0, -0.28,
+		60.0, -0.34,
+		65.0, -0.38,
+		68.5, -0.45
+	};
+	builtInDistortionProfiles[crystalSuperUltrawideV1_1NativeCA.name] = crystalSuperUltrawideV1_1NativeCA;
+	
 
 	DistortionProfileConfig crystalOGLikePimax = {};
 	// crystalOGLikePimax.name = "Crystal OG like Pimax";
