@@ -15,10 +15,12 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <stdexcept>
 #include <vector>
 #include "../../CustomHeadsetOpenVR/src/Distortion/RadialBezierDistortionProfile.cpp"
 #include "../../CustomHeadsetOpenVR/src/Distortion/NoneDistortionProfile.h"
 #include "../../CustomHeadsetOpenVR/src/Helpers/FovVisualization.cpp"
+#include "../../CustomHeadsetOpenVR/src/Helpers/ProjectionGeometry.h"
 
 // the driver's log sinks, declared by DriverLog.h
 void DriverLog(const char*, ...){}
@@ -156,6 +158,56 @@ static ordered_json Subsample(const ordered_json& samples, int stride){
 	return out;
 }
 
+// Independent invariants, so regenerating the fixture cannot bless the old symmetric assumptions.
+static void CheckProjectionMath(){
+	auto close = [](double actual, double expected, double tolerance, const char* label){
+		if(std::abs(actual - expected) > tolerance) throw std::runtime_error(label);
+	};
+	auto tanDegrees = [](double angle){ return std::tan(angle * 3.14159265358979323846 / 180.0); };
+	ProjectionGeometry::Projection left = {tanDegrees(-40), tanDegrees(60), tanDegrees(-35), tanDegrees(45)};
+	ProjectionGeometry::Projection right = {tanDegrees(-60), tanDegrees(40), tanDegrees(-35), tanDegrees(45)};
+	auto fov = ProjectionGeometry::CalculateFov(left, right, 5);
+	close(fov.horizontal, 110, 1e-9, "asymmetric combined HFOV");
+	close(fov.overlap, 90, 1e-9, "asymmetric overlap");
+	close(fov.vertical, 80, 1e-9, "asymmetric vertical FOV");
+	for(int disabled : {1, 2}){
+		auto oneEye = ProjectionGeometry::CalculateFov(left, right, 5, disabled);
+		close(oneEye.horizontal, 100, 1e-9, "single-eye HFOV");
+		close(oneEye.overlap, 0, 1e-9, "single-eye overlap");
+	}
+	close(ProjectionGeometry::CalculateFov(left, right, 5, 3).horizontal, 0, 1e-9, "both eyes disabled");
+
+	struct ProfileSize { float spanX, spanY; uint32_t width, height; };
+	auto size = [](float offsetX, float offsetY){
+		RadialBezierDistortionProfile profile;
+		profile.distortions = {{0, 0}, {45, 100}};
+		profile.distortionsRed = profile.distortionsBlue = {{0, 0}, {45, 0}};
+		profile.resolution = profile.resolutionX = profile.resolutionY = 2800;
+		profile.maxFovX = profile.maxFovY = 170;
+		profile.fovZoom = profile.flatFovZoom = 1;
+		profile.fovClamping = true;
+		profile.offsetX = offsetX;
+		profile.offsetY = offsetY;
+		profile.Initialize();
+		float l, r, b, t;
+		profile.GetProjectionRaw(vr::Eye_Left, &l, &r, &b, &t);
+		ProfileSize result = {r - l, t - b, 0, 0};
+		profile.GetRecommendedRenderTargetSize(&result.width, &result.height);
+		return result;
+	};
+	auto symmetric = size(0, 0);
+	double density = symmetric.width / symmetric.spanX;
+	for(auto offset : {std::pair<float, float>{20.f, 0.f}, {0.f, -15.f}, {-20.f, 15.f}}){
+		auto shifted = size(offset.first, offset.second);
+		close(shifted.width, density * shifted.spanX, 2, "asymmetric horizontal sampling density");
+		close(shifted.height, density * shifted.spanY, 2, "asymmetric vertical sampling density");
+		auto mirrored = size(-offset.first, -offset.second);
+		close(shifted.width, mirrored.width, 1, "mirrored horizontal sampling density");
+		close(shifted.height, mirrored.height, 1, "mirrored vertical sampling density");
+	}
+	std::cout << "passed projection and render-resolution regression checks" << std::endl;
+}
+
 static ordered_json RunCase(const ordered_json& testCase, const ordered_json& builtInProfiles, int stride){
 	std::string headset = testCase.value("headset", std::string("MeganeX8K"));
 	Config::BaseHeadsetConfig* config = MakeConfig(headset);
@@ -224,8 +276,10 @@ static ordered_json RunCase(const ordered_json& testCase, const ordered_json& bu
 	}
 
 	// combined fov
-	double combinedFovX = (std::atan(rightEyeRight) - std::atan(leftEyeLeft)) * 180.0 / kPi + config->eyeRotation * 2 + profile->eyeRotationOffset * 2;
-	double combinedFovY = (std::atan(leftEyeTop) - std::atan(leftEyeBottom)) * 180.0 / kPi;
+	auto combinedFov = ProjectionGeometry::CalculateFov(
+		{leftEyeLeft, leftEyeRight, leftEyeBottom, leftEyeTop},
+		{rightEyeLeft, rightEyeRight, rightEyeBottom, rightEyeTop},
+		config->eyeRotation + profile->eyeRotationOffset, config->disableEye);
 
 	// DistortionProfileConstructor::GetRecommendedRenderTargetSize and the BaseHeadset multipliers
 	uint32_t originalWidth = (uint32_t)settings.resolutionX;
@@ -265,8 +319,8 @@ static ordered_json RunCase(const ordered_json& testCase, const ordered_json& bu
 				{"fovY", renderFovY},
 				{"fovMaxX", renderFovMaxX},
 				{"fovMaxY", renderFovMaxY},
-				{"combinedFovX", combinedFovX},
-				{"combinedFovY", combinedFovY},
+				{"combinedFovX", combinedFov.horizontal},
+				{"combinedFovY", combinedFov.vertical},
 				{"projectionLeft", {leftEyeLeft, leftEyeRight, leftEyeBottom, leftEyeTop}},
 				{"projectionRight", {rightEyeLeft, rightEyeRight, rightEyeBottom, rightEyeTop}},
 				{"eyeRotationOffset", profile->eyeRotationOffset},
@@ -303,6 +357,7 @@ static ordered_json RunCase(const ordered_json& testCase, const ordered_json& bu
 }
 
 int main(int argc, char** argv){
+	CheckProjectionMath();
 	if(argc < 4){
 		std::cerr << "usage: harness <cases.json> <info.json> <out.json>" << std::endl;
 		return 1;

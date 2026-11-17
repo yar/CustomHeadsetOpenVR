@@ -6,6 +6,7 @@
  * FovVisualization::Write. Keep in sync with the C++ when those change.
  */
 import type { ResolutionInfo } from '../../services/JsonFileDefines';
+import { projectionFov } from './projection-geometry';
 import type { FovVisualizationChannels, FovVisualizationData } from '../fov-panel-chart/fov-visualization.service';
 import {
   ColorChannel, createDistortionProfile, DistortionProfile, DistortionProfileDefinition,
@@ -174,8 +175,7 @@ export function evaluateDistortion(definition: DistortionProfileDefinition | nul
 
   // combined fov from the full span of both eyes' clip planes, including eye rotation
   const eyeRotation = config.eyeRotation ?? 0;
-  const combinedFovX = (Math.atan(right.right) - Math.atan(left.left)) / DEG + eyeRotation * 2 + profile.eyeRotationOffset * 2;
-  const combinedFovY = verticalFov(left);
+  const { combinedFovX, combinedFovY } = projectionFov(left, right, eyeRotation + profile.eyeRotationOffset, disableEye);
 
   // DistortionProfileConstructor::GetRecommendedRenderTargetSize keeps the number of pixels of the panel
   // but takes the aspect ratio of the profile's 1:1 size, then BaseHeadset applies the multipliers

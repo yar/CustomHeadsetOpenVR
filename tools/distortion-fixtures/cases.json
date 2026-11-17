@@ -3,6 +3,32 @@
  "sampleStride": 4,
  "cases": [
   {
+   "name": "dream-air-mesh-asymmetric",
+   "headset": "DreamAir",
+   "profile": "Dream Air like Pimax 1.1",
+   "config": { "maxFovX": 98.8, "maxFovY": 87.4, "fovClamping": true }
+  },
+  {
+   "name": "asymmetric-inward-edges",
+   "headset": "DreamAir",
+   "profile": {
+    "type": "RadialBezier",
+    "distortions": [0, 0, 45, 100],
+    "distortionsRed": [0, 0, 45, 0],
+    "distortionsBlue": [0, 0, 45, 0],
+    "offsetX": 20,
+    "offsetY": -15,
+    "eyeRotationOffset": 2
+   },
+   "config": { "resolutionX": 2800, "resolutionY": 2800, "maxFovX": 170, "maxFovY": 170, "eyeRotation": 3, "fovClamping": true }
+  },
+  {
+   "name": "both-eyes-disabled",
+   "headset": "DreamAir",
+   "profile": "Dream Air Default",
+   "config": { "disableEye": 3, "disableEyeDecreaseFov": false }
+  },
+  {
    "name": "meganex8k-default",
    "headset": "MeganeX8K",
    "profile": "MeganeX8K Default"
@@ -30,7 +56,7 @@
   {
    "name": "crystal-og-like-pimax",
    "headset": "CrystalOG",
-   "profile": "Crystal like Pimax",
+   "profile": "Crystal OG Default",
    "config": {
     "maxFovX": 92.3,
     "maxFovY": 93.1

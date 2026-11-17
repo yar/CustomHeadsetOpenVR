@@ -434,46 +434,32 @@ void RadialBezierDistortionProfile::Initialize(){
 		distortionsSmoothBlue[i].degree  = std::tan(distortionsSmoothBlue[i].degree  * kPi / 180.0f);
 	}
 	
-	// calculate tangents for the edges of the input screen
-	maxHalfFovX = std::max(halfFovOuterX, halfFovInnerX);
-	maxHalfFovY = std::max(halfFovTopY, halfFovBottomY);
-	float edgeTanX = std::tan(maxHalfFovX * kPi / 180.0f);
-	float edgeTanY = std::tan(maxHalfFovY * kPi / 180.0f);
-	
-	// calculate the maximum output percentage for the edge of the output
-	float maxOutputPercentageX = SampleFromPoints(distortionsSmoothGreen, edgeTanX);
-	float maxOutputPercentageY = SampleFromPoints(distortionsSmoothGreen, edgeTanY);
-	// calculate the maximum ratio between input and output image pixels
-	float maxInputOutputRatioX = 0.0f;
-	float maxInputOutputRatioY = 0.0f;
+	// The curve's steepest slope gives panel pixels per unit of render tangent.
+	// Use the actual span of each asymmetric projection, not twice its wider half.
+	float tangentSpanX = std::tan(halfFovOuterX * kPi / 180.0f) + std::tan(halfFovInnerX * kPi / 180.0f);
+	float tangentSpanY = std::tan(halfFovTopY * kPi / 180.0f) + std::tan(halfFovBottomY * kPi / 180.0f);
+	float maxPanelPixelsPerTangent = 0.0f;
 	for(size_t i = 0; i < distortionsSmoothGreen.size() - 1; i++){
 		DistortionPoint prevPoint = distortionsSmoothGreen[i];
 		DistortionPoint nextPoint = distortionsSmoothGreen[i + 1];
-		float inputOutputRatioX = (nextPoint.position - prevPoint.position) / maxOutputPercentageX / ((nextPoint.degree - prevPoint.degree) / edgeTanX);
-		maxInputOutputRatioX = std::max(maxInputOutputRatioX, inputOutputRatioX);
-		float inputOutputRatioY = (nextPoint.position - prevPoint.position) / maxOutputPercentageY / ((nextPoint.degree - prevPoint.degree) / edgeTanY);
-		maxInputOutputRatioY = std::max(maxInputOutputRatioY, inputOutputRatioY);
-		// DriverLog("distortion ratio: %f", inputOutputRatio);
+		float tangentStep = nextPoint.degree - prevPoint.degree;
+		if(tangentStep > 0){
+			float panelPixelsPerTangent = (nextPoint.position - prevPoint.position) / tangentStep * resolution / 200.0f;
+			maxPanelPixelsPerTangent = std::max(maxPanelPixelsPerTangent, panelPixelsPerTangent);
+		}
 	}
-	
-	// calculate the resolution of the output screen that is actually used based on the maximum output percentage for the given fov
-	float usedOutputScreenResolutionX = maxOutputPercentageX / 100.0f * resolution;
-	float usedOutputScreenResolutionY = maxOutputPercentageY / 100.0f * resolution;
-	DriverLog("Used output screen resolution: %fx%f", usedOutputScreenResolutionX, usedOutputScreenResolutionY);
-	// calculate the required input resoltions required to get 1:1 distortion in the most distorted spot
-	float desiredInputResolutionX = maxInputOutputRatioX * usedOutputScreenResolutionX;
-	float desiredInputResolutionY = maxInputOutputRatioY * usedOutputScreenResolutionY;
+
+	float desiredInputResolutionX = maxPanelPixelsPerTangent * tangentSpanX;
+	float desiredInputResolutionY = maxPanelPixelsPerTangent * tangentSpanY;
 	recommendedRenderWidth = (uint32_t)(desiredInputResolutionX);
 	recommendedRenderHeight = (uint32_t)(desiredInputResolutionY);
 	
-	DriverLog("Max distortion ratio X: %f", maxInputOutputRatioX);
-	DriverLog("Max distortion ratio Y: %f", maxInputOutputRatioY);
+	DriverLog("Max panel pixels per render tangent: %f", maxPanelPixelsPerTangent);
 	// steamvr lists percentage as total number of pixels, not a single dimension
 	DriverLog("Oversampling required for 1:1 distortion: %f%% %ix%i", ((desiredInputResolutionX * desiredInputResolutionY) / (resolutionX * resolutionY)) * 100.0f, (int)(desiredInputResolutionX), (int)(desiredInputResolutionY));
 	
 	// calculate aspect ratios of output and desired input resolution
 	DriverLog("Display aspect ratio : %f\n", resolutionX / resolutionY);
-	DriverLog("Used output aspect ratio : %f\n", usedOutputScreenResolutionX / usedOutputScreenResolutionY);
 	DriverLog("1:1 input aspect ratio : %f\n", desiredInputResolutionX / desiredInputResolutionY);
 	
 	if(false){

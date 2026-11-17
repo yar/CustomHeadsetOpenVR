@@ -9,7 +9,9 @@ import harnessFixture from './fixtures/driver-harness-cases.json';
  * The fixtures are what the driver computed for the same inputs: crystal-super-50ppd-default.json was
  * recorded from a real session (info.json resolution and fovVisualization.json), driver-harness-cases.json
  * comes from tools/distortion-fixtures/harness.cpp, which runs the driver's own profile and sampling code
- * over cases covering the other code paths. Regenerate both when the C++ distortion code changes.
+ * over cases covering the other code paths. Regenerate the harness when the C++ distortion code changes.
+ * The historical live recording predates the asymmetric render-size fix; its projections and sampling
+ * remain useful ground truth, but its old render sizes must not be treated as correct.
  *
  * Tolerances: the driver computes in single precision, this port in double. That is invisible in the
  * projections and grids (differences of 1e-7 and 1e-4, the recorded grid is quantized to 1e-4), except
@@ -21,7 +23,6 @@ const FOV_TOLERANCE_DEGREES = 0.01;
 const PROJECTION_TOLERANCE = 1e-4;
 const GRID_TOLERANCE = 1e-3;
 const RENDER_SIZE_TOLERANCE_PIXELS = 1;
-const RENDER_PERCENT_TOLERANCE = 0.05;
 
 type SamplingExpectation = {
   gridSize: number;
@@ -38,7 +39,7 @@ function expectClose(actual: number, expected: number, tolerance: number, what: 
   expect(Math.abs(actual - expected)).withContext(`${what}: got ${actual}, driver ${expected}`).toBeLessThanOrEqual(tolerance);
 }
 
-function expectResolution(actual: ResolutionInfo, expected: ResolutionInfo): void {
+function expectResolution(actual: ResolutionInfo, expected: ResolutionInfo, compareRenderSize = true): void {
   for (const key of ['fovX', 'fovY', 'fovMaxX', 'fovMaxY', 'combinedFovX', 'combinedFovY'] as const) {
     expectClose(actual[key], expected[key], FOV_TOLERANCE_DEGREES, key);
   }
@@ -51,10 +52,17 @@ function expectResolution(actual: ResolutionInfo, expected: ResolutionInfo): voi
       expectClose(got[i], want[i], PROJECTION_TOLERANCE, `${key}[${i}]`);
     }
   }
+  if (!compareRenderSize) return;
   for (const key of ['renderResolution1To1X', 'renderResolution1To1Y', 'renderResolution100PercentX', 'renderResolution100PercentY'] as const) {
     expectClose(actual[key], expected[key], RENDER_SIZE_TOLERANCE_PIXELS, key);
   }
-  expectClose(actual.renderResolution1To1Percent, expected.renderResolution1To1Percent, RENDER_PERCENT_TOLERANCE, 'renderResolution1To1Percent');
+  // A one-pixel difference can also move the normalized 100% aspect ratio by a pixel.
+  // Bound the percentage using the same pixel tolerance instead of a fixed percentage tolerance.
+  const percentBound = (delta: number) => 100 * Math.max(
+    Math.pow(Math.max(0, expected.renderResolution1To1X + delta) / (expected.renderResolution100PercentX - delta), 2),
+    Math.pow(Math.max(0, expected.renderResolution1To1Y + delta) / (expected.renderResolution100PercentY - delta), 2));
+  expect(actual.renderResolution1To1Percent).toBeGreaterThanOrEqual(percentBound(-RENDER_SIZE_TOLERANCE_PIXELS));
+  expect(actual.renderResolution1To1Percent).toBeLessThanOrEqual(percentBound(RENDER_SIZE_TOLERANCE_PIXELS));
 }
 
 /** compare the sampling at the grid points the expectation kept, and report the worst difference */
@@ -97,13 +105,13 @@ function expectSampling(actual: FovVisualizationData | undefined, expected: Samp
 }
 
 describe('evaluateDistortion', () => {
-  it('reproduces the info.json and fovVisualization.json of a live Crystal Super 50PPD session', () => {
+  it('preserves the projections and sampling of a recorded Crystal Super 50PPD session', () => {
     const result = evaluateDistortion(liveFixture.profile, liveFixture.config, {
       headsetType: liveFixture.headsetType,
       distortionProfile: liveFixture.profileName,
     });
     expect(result.profile).toBeInstanceOf(RadialBezierDistortionProfile);
-    expectResolution(result.resolution, liveFixture.expected.resolution);
+    expectResolution(result.resolution, liveFixture.expected.resolution, false);
     expectSampling(result.sampling, liveFixture.expected.sampling);
     expect(result.sampling?.headsetType).toBe(liveFixture.headsetType);
     expect(result.sampling?.distortionProfile).toBe(liveFixture.profileName);

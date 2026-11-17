@@ -16,9 +16,13 @@ computes. The tools here produce that ground truth:
   scales, the render resolution multipliers, a disabled eye, legacy smoothing and the none profile.
   `generate-harness-fixture.ps1` builds and runs it (needs the Visual Studio C++ toolset and a driver
   `info.json` for the built-in profile definitions, by default the installed driver's).
+  Before generating anything, it checks asymmetric sampling density, mirrored optical centers,
+  combined FOV, overlap and disabled eyes against independent invariants.
 - `record-live-fixture.py` records a real driver session (`info.json`, `settings.json`,
   `fovVisualization.json` from `%APPDATA%\CustomHeadset`) into a fixture, for a headset that is
   actually running. `crystal-super-50ppd-default.json` was recorded this way.
+  This historical recording predates the asymmetric render-size fix: its projections and sampling
+  are still checked, while render sizes are verified against the current C++ harness instead.
 
 Regenerate the harness fixture whenever the C++ distortion code changes, then run the spec:
 

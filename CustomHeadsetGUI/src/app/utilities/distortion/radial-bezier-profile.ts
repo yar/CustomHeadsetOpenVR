@@ -183,8 +183,6 @@ export class RadialBezierDistortionProfile implements DistortionProfile {
   halfFovOuterX = 0;
   halfFovTopY = 0;
   halfFovBottomY = 0;
-  maxHalfFovX = 0;
-  maxHalfFovY = 0;
   recommendedRenderWidth = 0;
   recommendedRenderHeight = 0;
   // radial maps from the output radius to the input radius, ready to compute the uv distortions
@@ -297,31 +295,21 @@ export class RadialBezierDistortionProfile implements DistortionProfile {
       }
     }
 
-    // tangents for the edges of the input screen
-    this.maxHalfFovX = Math.max(this.halfFovOuterX, this.halfFovInnerX);
-    this.maxHalfFovY = Math.max(this.halfFovTopY, this.halfFovBottomY);
-    const edgeTanX = Math.tan(this.maxHalfFovX * DEG);
-    const edgeTanY = Math.tan(this.maxHalfFovY * DEG);
-    // the maximum output percentage for the edge of the output
-    const maxOutputPercentageX = sampleCurve(distortionsSmoothGreen, edgeTanX);
-    const maxOutputPercentageY = sampleCurve(distortionsSmoothGreen, edgeTanY);
-    // the maximum ratio between input and output image pixels
-    let maxInputOutputRatioX = 0;
-    let maxInputOutputRatioY = 0;
+    // Panel pixels per render tangent, scaled by the actual asymmetric projection span.
+    const tangentSpanX = Math.tan(this.halfFovOuterX * DEG) + Math.tan(this.halfFovInnerX * DEG);
+    const tangentSpanY = Math.tan(this.halfFovTopY * DEG) + Math.tan(this.halfFovBottomY * DEG);
+    let maxPanelPixelsPerTangent = 0;
     for (let i = 0; i < distortionsSmoothGreen.length - 1; i++) {
       const prevPoint = distortionsSmoothGreen[i];
       const nextPoint = distortionsSmoothGreen[i + 1];
-      const inputOutputRatioX = (nextPoint.y - prevPoint.y) / maxOutputPercentageX / ((nextPoint.x - prevPoint.x) / edgeTanX);
-      maxInputOutputRatioX = Math.max(maxInputOutputRatioX, inputOutputRatioX);
-      const inputOutputRatioY = (nextPoint.y - prevPoint.y) / maxOutputPercentageY / ((nextPoint.x - prevPoint.x) / edgeTanY);
-      maxInputOutputRatioY = Math.max(maxInputOutputRatioY, inputOutputRatioY);
+      const tangentStep = nextPoint.x - prevPoint.x;
+      if (tangentStep > 0) {
+        const panelPixelsPerTangent = (nextPoint.y - prevPoint.y) / tangentStep * this.resolution / 200;
+        maxPanelPixelsPerTangent = Math.max(maxPanelPixelsPerTangent, panelPixelsPerTangent);
+      }
     }
-    // the resolution of the output screen that is actually used for the given fov, and the input
-    // resolution required to get 1:1 distortion in the most distorted spot
-    const usedOutputScreenResolutionX = maxOutputPercentageX / 100 * this.resolution;
-    const usedOutputScreenResolutionY = maxOutputPercentageY / 100 * this.resolution;
-    this.recommendedRenderWidth = Math.trunc(maxInputOutputRatioX * usedOutputScreenResolutionX);
-    this.recommendedRenderHeight = Math.trunc(maxInputOutputRatioY * usedOutputScreenResolutionY);
+    this.recommendedRenderWidth = Math.trunc(maxPanelPixelsPerTangent * tangentSpanX);
+    this.recommendedRenderHeight = Math.trunc(maxPanelPixelsPerTangent * tangentSpanY);
 
     // create radial maps, reaching the corners of the screen
     let distancePastOne = Math.max(this.resolutionX, this.resolutionY) / this.resolution;

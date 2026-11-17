@@ -7,6 +7,7 @@
 #include "../HiddenArea/HiddenArea.h"
 #include "../Helpers/DisplayHelper.h"
 #include "../Helpers/FovVisualization.h"
+#include "../Helpers/ProjectionGeometry.h"
 
 constexpr float kPi{ 3.1415926535897932384626433832795028841971693993751058209749445f };
 
@@ -700,10 +701,12 @@ void BaseHeadsetShim::UpdateSettings(){
 			rightEyeBottom = rightEyeRight = -rightEyeTop;
 		}
 		// calculate combined FOV from the full span of both eyes' clip planes, including eye rotation
-		double combinedFovX = (std::atan(rightEyeRight) - std::atan(leftEyeLeft)) * 180.0 / kPi + GetConfig().eyeRotation * 2 + distortionProfileConstructor.profile->eyeRotationOffset * 2;
-		double combinedFovY = (std::atan(leftEyeTop) - std::atan(leftEyeBottom)) * 180.0 / kPi;
-		driverConfigLoader.info.combinedFovX = combinedFovX;
-		driverConfigLoader.info.combinedFovY = combinedFovY;
+		auto combinedFov = ProjectionGeometry::CalculateFov(
+			{leftEyeLeft, leftEyeRight, leftEyeBottom, leftEyeTop},
+			{rightEyeLeft, rightEyeRight, rightEyeBottom, rightEyeTop},
+			GetConfig().eyeRotation + distortionProfileConstructor.profile->eyeRotationOffset, GetConfig().disableEye);
+		driverConfigLoader.info.combinedFovX = combinedFov.horizontal;
+		driverConfigLoader.info.combinedFovY = combinedFov.vertical;
 		// save the raw projections for the FOV preview in the GUI
 		driverConfigLoader.info.projectionLeft[0] = leftEyeLeft;
 		driverConfigLoader.info.projectionLeft[1] = leftEyeRight;
