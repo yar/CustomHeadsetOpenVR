@@ -6,7 +6,7 @@
    "name": "dream-air-mesh-asymmetric",
    "headset": "DreamAir",
    "profile": "Dream Air like Pimax 1.1",
-   "config": { "maxFovX": 98.8, "maxFovY": 87.4, "fovClamping": true }
+   "config": { "fovClamping": true }
   },
   {
    "name": "asymmetric-inward-edges",

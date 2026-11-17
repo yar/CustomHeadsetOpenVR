@@ -36,8 +36,8 @@ export class DreamAirComponent {
     showDisplayRotation: false,
     showDriverWarning: false,
     ipdInfo: $localize`The inter pupillary distance of the virtual cameras in SteamVR applications. This IPD should be matched with what you set for the headset's physical IPD to get the correct world scale.`,
-    defaultMaxFovX: 98,
-    defaultMaxFovY: 88
+    defaultMaxFovX: 98.8,
+    defaultMaxFovY: 87.5
   };
 
   constructor() {

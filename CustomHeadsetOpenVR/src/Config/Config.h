@@ -322,8 +322,8 @@ public:
 			headsetType = HeadsetType::DreamAir;
 			distortionProfile = "Dream Air Default";
 			distortionProfileDeviceType = "DreamAir";
-			maxFovX = 98;
-			maxFovY = 88;
+			maxFovX = 98.8;
+			maxFovY = 87.5;
 			fovClamping = false;
 			edidVendorId = 53826; // PVR
 			displayRotation = 3;

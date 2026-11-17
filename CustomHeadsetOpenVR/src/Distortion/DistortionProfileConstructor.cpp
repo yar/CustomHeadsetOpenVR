@@ -213,10 +213,12 @@ bool PopulateBuiltInDistortionProfiles(){
 	// rasterized captures and uses the optical center from the mesh placement constant.
 	DistortionProfileConfig dreamAirLikePimax11 = dreamAirLikePimax;
 	dreamAirLikePimax11.name = "Dream Air like Pimax 1.1";
-	dreamAirLikePimax11.description = "Refit of Dream Air like Pimax from the compositor's warp mesh vertex buffer, which samples the Pimax lens model exactly instead of through its rasterization. The rasterized captures carried a 0.39% radial scale inflation that this profile removes, together with the exactly measured optical center sitting 2.70% towards the nose and 0.89% above the panel center. The geometry follows the Pimax lens model within 0.05 degrees across the whole field and the chromatic aberration calibration of the camera calibrated Dream Air Default is kept. Set Max FOV to 98.8x87.4 to render exactly the field the native profile shows.";
+	dreamAirLikePimax11.description = "Refit of Dream Air like Pimax from the compositor's warp mesh vertex buffer, which samples the Pimax lens model exactly instead of through its rasterization. The rasterized captures carried a 0.39% radial scale inflation that this profile removes, together with the exactly measured optical center sitting 2.70% towards the nose and 0.89% above the panel center. The geometry follows the Pimax lens model within 0.05 degrees across the whole field and the chromatic aberration calibration of the camera calibrated Dream Air Default is kept. Recommended Max FOV: 98.8x87.5.";
 	dreamAirLikePimax11.creationDate = 1791849600.0;
 	dreamAirLikePimax11.offsetX = -2.70f;
 	dreamAirLikePimax11.offsetY = 0.89f;
+	dreamAirLikePimax11.recommendedMaxFovX = 98.8;
+	dreamAirLikePimax11.recommendedMaxFovY = 87.5;
 	dreamAirLikePimax11.distortions = {
 		0.00, 0.000,
 		2.50, 6.416,
